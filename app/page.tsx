@@ -67,11 +67,11 @@ export default function Home() {
               <a href="#features" className="px-4 py-2 text-sm text-gray-400 hover:text-white transition-colors font-medium">Features</a>
               <a href="#how-it-works" className="px-4 py-2 text-sm text-gray-400 hover:text-white transition-colors font-medium">How It Works</a>
               <a href="#pricing" className="px-4 py-2 text-sm text-gray-400 hover:text-white transition-colors font-medium">Pricing</a>
-              <a href="#" className="px-4 py-2 text-sm text-gray-400 hover:text-white transition-colors font-medium">Login</a>
+              <a href="/auth" className="px-4 py-2 text-sm text-gray-400 hover:text-white transition-colors font-medium">Login</a>
               <div className="w-px h-5 bg-white/[0.06] mx-2"></div>
-              <button className="ml-2 px-5 py-2.5 rounded-lg bg-gradient-to-r from-violet-600 via-purple-600 to-fuchsia-600 hover:shadow-lg hover:shadow-purple-600/30 text-white text-sm font-semibold transition-all">
+              <a href="/auth?mode=register" className="ml-2 px-5 py-2.5 rounded-lg bg-gradient-to-r from-violet-600 via-purple-600 to-fuchsia-600 hover:shadow-lg hover:shadow-purple-600/30 text-white text-sm font-semibold transition-all inline-block">
                 Start Free Trial
-              </button>
+              </a>
             </nav>
 
             {/* Mobile Menu Button */}
@@ -91,10 +91,10 @@ export default function Home() {
               <a href="#features" className="block px-4 py-3 text-sm text-gray-400 hover:text-white hover:bg-white/[0.05] rounded-lg transition-all font-medium">Features</a>
               <a href="#how-it-works" className="block px-4 py-3 text-sm text-gray-400 hover:text-white hover:bg-white/[0.05] rounded-lg transition-all font-medium">How It Works</a>
               <a href="#pricing" className="block px-4 py-3 text-sm text-gray-400 hover:text-white hover:bg-white/[0.05] rounded-lg transition-all font-medium">Pricing</a>
-              <a href="#" className="block px-4 py-3 text-sm text-gray-400 hover:text-white hover:bg-white/[0.05] rounded-lg transition-all font-medium">Login</a>
-              <button className="w-full mt-4 px-5 py-3 rounded-lg bg-gradient-to-r from-violet-600 via-purple-600 to-fuchsia-600 text-white text-sm font-semibold transition-all">
+              <a href="/auth" className="block px-4 py-3 text-sm text-gray-400 hover:text-white hover:bg-white/[0.05] rounded-lg transition-all font-medium">Login</a>
+              <a href="/auth?mode=register" className="w-full mt-4 px-5 py-3 rounded-lg bg-gradient-to-r from-violet-600 via-purple-600 to-fuchsia-600 text-white text-sm font-semibold transition-all block text-center">
                 Start Free Trial
-              </button>
+              </a>
             </div>
           </div>
         )}
@@ -129,9 +129,9 @@ export default function Home() {
               </p>
               
               <div className="flex flex-wrap gap-3">
-                <button className="group relative px-7 py-3.5 rounded-lg bg-white hover:bg-gray-100 text-black text-sm font-bold transition-all overflow-hidden">
+                <a href="/auth?mode=register" className="group relative px-7 py-3.5 rounded-lg bg-white hover:bg-gray-100 text-black text-sm font-bold transition-all overflow-hidden inline-block">
                   <span className="relative z-10">Start Free 7-Day Trial →</span>
-                </button>
+                </a>
                 <button className="px-7 py-3.5 rounded-lg bg-white/[0.05] hover:bg-white/[0.08] border border-white/[0.08] text-white text-sm font-semibold transition-all backdrop-blur-sm">
                   View Demo
                 </button>
@@ -144,51 +144,74 @@ export default function Home() {
               </div>
             </div>
 
-            {/* Right - Enhanced Chart */}
+            {/* Right - Enhanced Insight Display */}
             <div className="relative">
-              <div className="absolute inset-0 bg-gradient-to-br from-green-600/5 via-transparent to-emerald-600/5 rounded-2xl blur-3xl"></div>
+              <div className="absolute inset-0 bg-gradient-to-br from-purple-600/5 via-transparent to-pink-600/5 rounded-2xl blur-3xl"></div>
               
               <div className="relative w-full p-6 rounded-2xl bg-white/[0.02] border border-white/[0.08] backdrop-blur-sm">
-                {/* Chart Title & Description */}
+                {/* Header */}
                 <div className="mb-6">
-                  <h3 className="text-base font-semibold text-white mb-2">Performance Analysis</h3>
-                  <p className="text-xs text-gray-500">7 proprietary algorithms analyzing your edge</p>
+                  <h3 className="text-base font-semibold text-white mb-2">Sample Analysis Output</h3>
+                  <p className="text-xs text-gray-500">Real insights from EdgeFinder AI</p>
                 </div>
 
-                {/* Minimalist Line Chart */}
-                <div className="h-44 relative mb-6">
-                  {/* SVG Line Chart */}
-                  <svg className="w-full h-full" viewBox="0 0 400 160" preserveAspectRatio="none">
-                    {/* Grid lines */}
-                    <line x1="0" y1="40" x2="400" y2="40" stroke="rgba(255,255,255,0.03)" strokeWidth="1" />
-                    <line x1="0" y1="80" x2="400" y2="80" stroke="rgba(255,255,255,0.03)" strokeWidth="1" />
-                    <line x1="0" y1="120" x2="400" y2="120" stroke="rgba(255,255,255,0.03)" strokeWidth="1" />
-                    
-                    {/* Area under curve */}
-                    <defs>
-                      <linearGradient id="chartGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-                        <stop offset="0%" stopColor="rgba(34,197,94,0.15)" />
-                        <stop offset="100%" stopColor="rgba(34,197,94,0.01)" />
-                      </linearGradient>
-                    </defs>
-                    
-                    {/* Fill area */}
-                    <path d="M 0 110 Q 50 85, 100 75 T 200 50 T 300 45 T 400 40 L 400 160 L 0 160 Z" fill="url(#chartGradient)" />
-                    
-                    {/* Line with smooth curves */}
-                    <path d="M 0 110 Q 50 85, 100 75 T 200 50 T 300 45 T 400 40" fill="none" stroke="#22c55e" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
-                  </svg>
+                {/* Key Insights */}
+                <div className="space-y-4 mb-6">
+                  {/* Biggest Edge */}
+                  <div className="p-4 rounded-lg bg-green-500/10 border border-green-500/20">
+                    <div className="flex items-start gap-3">
+                      <div className="w-8 h-8 rounded-lg bg-green-500/20 flex items-center justify-center flex-shrink-0">
+                        <Target className="w-4 h-4 text-green-400" />
+                      </div>
+                      <div>
+                        <div className="text-xs font-semibold text-green-400 mb-1">YOUR BIGGEST EDGE</div>
+                        <div className="text-sm text-gray-300 leading-relaxed">
+                          Morning breakouts (9:30-10:30 AM) have 73% win rate vs 51% overall
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Biggest Mistake */}
+                  <div className="p-4 rounded-lg bg-red-500/10 border border-red-500/20">
+                    <div className="flex items-start gap-3">
+                      <div className="w-8 h-8 rounded-lg bg-red-500/20 flex items-center justify-center flex-shrink-0">
+                        <Shield className="w-4 h-4 text-red-400" />
+                      </div>
+                      <div>
+                        <div className="text-xs font-semibold text-red-400 mb-1">YOUR BIGGEST LEAK</div>
+                        <div className="text-sm text-gray-300 leading-relaxed">
+                          Holding losers 3.2x longer than winners cost you $2,847 this month
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Emotional Pattern */}
+                  <div className="p-4 rounded-lg bg-yellow-500/10 border border-yellow-500/20">
+                    <div className="flex items-start gap-3">
+                      <div className="w-8 h-8 rounded-lg bg-yellow-500/20 flex items-center justify-center flex-shrink-0">
+                        <Zap className="w-4 h-4 text-yellow-400" />
+                      </div>
+                      <div>
+                        <div className="text-xs font-semibold text-yellow-400 mb-1">EMOTIONAL PATTERN</div>
+                        <div className="text-sm text-gray-300 leading-relaxed">
+                          After 2+ losses, next trade win rate drops to 34% (revenge trading detected)
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                 </div>
 
-                {/* Performance Metrics */}
+                {/* Stats Footer */}
                 <div className="grid grid-cols-2 gap-4 border-t border-white/[0.06] pt-4">
                   <div>
-                    <div className="text-2xl font-bold text-green-400 mb-0.5">60 sec</div>
-                    <p className="text-xs text-gray-500">Analysis Time</p>
+                    <div className="text-2xl font-bold text-purple-400 mb-0.5">60 sec</div>
+                    <p className="text-xs text-gray-500">To Generate</p>
                   </div>
                   <div>
-                    <div className="text-2xl font-bold text-white mb-0.5">7 Algorithms</div>
-                    <p className="text-xs text-gray-500">Pattern Detection</p>
+                    <div className="text-2xl font-bold text-white mb-0.5">3 Actions</div>
+                    <p className="text-xs text-gray-500">To Improve</p>
                   </div>
                 </div>
               </div>
@@ -556,9 +579,9 @@ export default function Home() {
                 ))}
               </div>
               
-              <button className="w-full py-3.5 rounded-lg bg-white/[0.08] hover:bg-white/[0.12] border border-white/[0.08] text-white text-sm font-bold transition-all">
+              <a href="/auth?mode=register" className="w-full py-3.5 rounded-lg bg-white/[0.08] hover:bg-white/[0.12] border border-white/[0.08] text-white text-sm font-bold transition-all block text-center">
                 Start Free Trial →
-              </button>
+              </a>
             </div>
 
             {/* Pro Plan */}
@@ -615,9 +638,9 @@ export default function Home() {
                   ))}
                 </div>
                 
-                <button className="w-full py-3.5 rounded-lg bg-white hover:bg-gray-100 text-black text-sm font-bold transition-all">
+                <a href="/auth?mode=register" className="w-full py-3.5 rounded-lg bg-white hover:bg-gray-100 text-black text-sm font-bold transition-all block text-center">
                   Start Free Trial →
-                </button>
+                </a>
                 
                 <p className="text-center text-xs text-gray-600 mt-4">Cancel anytime. No contracts.</p>
               </div>
@@ -651,9 +674,9 @@ export default function Home() {
           <p className="text-lg text-gray-400 mb-9 max-w-[700px] mx-auto">
             Every trade you take without understanding your edge is a gamble. Every bad habit that costs you money is invisible until you measure it. EdgeFinder shows you what works for you.
           </p>
-          <button className="inline-flex items-center gap-2 px-8 py-4 rounded-lg bg-white hover:bg-gray-100 hover:shadow-xl hover:shadow-white/10 text-black text-base font-bold transition-all">
+          <a href="/auth?mode=register" className="inline-flex items-center gap-2 px-8 py-4 rounded-lg bg-white hover:bg-gray-100 hover:shadow-xl hover:shadow-white/10 text-black text-base font-bold transition-all">
             Start Your Free 7-Day Trial →
-          </button>
+          </a>
           <p className="text-sm text-gray-500 mt-4">No credit card • Analyze up to 100 trades free • Takes 60 seconds to get insights</p>
         </div>
       </section>
@@ -675,8 +698,8 @@ export default function Home() {
             <div>
               <h4 className="font-bold text-white mb-4 text-sm">Legal</h4>
               <ul className="space-y-2.5">
-                <li><a href="#" className="text-gray-500 hover:text-white transition-colors text-sm">Terms of Service</a></li>
-                <li><a href="#" className="text-gray-500 hover:text-white transition-colors text-sm">Privacy Policy</a></li>
+                <li><a href="/terms" className="text-gray-500 hover:text-white transition-colors text-sm">Terms of Service</a></li>
+                <li><a href="/privacy" className="text-gray-500 hover:text-white transition-colors text-sm">Privacy Policy</a></li>
                 <li><a href="#" className="text-gray-500 hover:text-white transition-colors text-sm">Disclaimer</a></li>
                 <li><a href="#" className="text-gray-500 hover:text-white transition-colors text-sm">Cookie Policy</a></li>
               </ul>
