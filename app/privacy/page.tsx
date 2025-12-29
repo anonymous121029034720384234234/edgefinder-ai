@@ -30,11 +30,6 @@ export default function PrivacyPage() {
         <div className="max-w-[1600px] mx-auto px-10 lg:px-20">
           <div className="flex items-center justify-between h-20">
             <Link href="/" className="flex items-center gap-2">
-              <div className="relative">
-                <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-violet-600 via-purple-600 to-fuchsia-600 shadow-lg shadow-purple-600/30 flex items-center justify-center">
-                  <div className="w-4 h-4 border-2 border-white rounded-sm transform rotate-45"></div>
-                </div>
-              </div>
               <span className="text-xl font-bold tracking-tight">
                 <span className="text-white">Edge</span>
                 <span 

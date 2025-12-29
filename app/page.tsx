@@ -43,11 +43,6 @@ export default function Home() {
           <div className="flex items-center justify-between h-20">
             {/* Redesigned Logo */}
             <div className="flex items-center gap-2">
-              <div className="relative">
-                <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-violet-600 via-purple-600 to-fuchsia-600 shadow-lg shadow-purple-600/30 flex items-center justify-center">
-                  <div className="w-4 h-4 border-2 border-white rounded-sm transform rotate-45"></div>
-                </div>
-              </div>
               <span className="text-xl font-bold tracking-tight">
                 <span className="text-white">Edge</span>
                 <span 
@@ -67,9 +62,9 @@ export default function Home() {
               <a href="#features" className="px-4 py-2 text-sm text-gray-400 hover:text-white transition-colors font-medium">Features</a>
               <a href="#how-it-works" className="px-4 py-2 text-sm text-gray-400 hover:text-white transition-colors font-medium">How It Works</a>
               <a href="#pricing" className="px-4 py-2 text-sm text-gray-400 hover:text-white transition-colors font-medium">Pricing</a>
-              <a href="/auth" className="px-4 py-2 text-sm text-gray-400 hover:text-white transition-colors font-medium">Login</a>
+              <a href="/signin" className="px-4 py-2 text-sm text-gray-400 hover:text-white transition-colors font-medium">Login</a>
               <div className="w-px h-5 bg-white/[0.06] mx-2"></div>
-              <a href="/auth?mode=register" className="ml-2 px-5 py-2.5 rounded-lg bg-gradient-to-r from-violet-600 via-purple-600 to-fuchsia-600 hover:shadow-lg hover:shadow-purple-600/30 text-white text-sm font-semibold transition-all inline-block">
+              <a href="/signup" className="ml-2 px-5 py-2.5 rounded-lg bg-gradient-to-r from-violet-600 via-purple-600 to-fuchsia-600 hover:shadow-lg hover:shadow-purple-600/30 text-white text-sm font-semibold transition-all inline-block">
                 Start Free Trial
               </a>
             </nav>
@@ -91,8 +86,8 @@ export default function Home() {
               <a href="#features" className="block px-4 py-3 text-sm text-gray-400 hover:text-white hover:bg-white/[0.05] rounded-lg transition-all font-medium">Features</a>
               <a href="#how-it-works" className="block px-4 py-3 text-sm text-gray-400 hover:text-white hover:bg-white/[0.05] rounded-lg transition-all font-medium">How It Works</a>
               <a href="#pricing" className="block px-4 py-3 text-sm text-gray-400 hover:text-white hover:bg-white/[0.05] rounded-lg transition-all font-medium">Pricing</a>
-              <a href="/auth" className="block px-4 py-3 text-sm text-gray-400 hover:text-white hover:bg-white/[0.05] rounded-lg transition-all font-medium">Login</a>
-              <a href="/auth?mode=register" className="w-full mt-4 px-5 py-3 rounded-lg bg-gradient-to-r from-violet-600 via-purple-600 to-fuchsia-600 text-white text-sm font-semibold transition-all block text-center">
+              <a href="/signin" className="block px-4 py-3 text-sm text-gray-400 hover:text-white hover:bg-white/[0.05] rounded-lg transition-all font-medium">Login</a>
+              <a href="/signup" className="w-full mt-4 px-5 py-3 rounded-lg bg-gradient-to-r from-violet-600 via-purple-600 to-fuchsia-600 text-white text-sm font-semibold transition-all block text-center">
                 Start Free Trial
               </a>
             </div>
@@ -682,53 +677,66 @@ export default function Home() {
       </section>
 
       {/* Footer */}
-      <footer className="relative border-t border-white/[0.03] bg-black/40 backdrop-blur-xl">
-        <div className="max-w-[1600px] mx-auto px-10 lg:px-20 py-14">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-10 mb-12">
+      <footer className="relative border-t border-white/[0.03] bg-gradient-to-t from-black/60 to-transparent">
+        <div className="max-w-[1600px] mx-auto px-10 lg:px-20 py-12">
+          {/* Main Footer Content */}
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-10 mb-12">
+            {/* Brand Column */}
             <div>
-              <h4 className="font-bold text-white mb-4 text-sm">Company</h4>
-              <ul className="space-y-2.5">
-                <li><a href="#" className="text-gray-500 hover:text-white transition-colors text-sm">About Us</a></li>
-                <li><a href="#how-it-works" className="text-gray-500 hover:text-white transition-colors text-sm">How It Works</a></li>
-                <li><a href="#pricing" className="text-gray-500 hover:text-white transition-colors text-sm">Pricing</a></li>
-                <li><a href="#" className="text-gray-500 hover:text-white transition-colors text-sm">Blog</a></li>
-                <li><a href="#" className="text-gray-500 hover:text-white transition-colors text-sm">Contact</a></li>
+              <div className="mb-4">
+                <span className="text-lg font-bold">
+                  <span className="text-white">Edge</span>
+                  <span 
+                    className="bg-clip-text text-transparent"
+                    style={{
+                      backgroundImage: 'linear-gradient(135deg, #a855f7 0%, #ec4899 50%, #f97316 100%)',
+                    }}
+                  >
+                    Finder
+                  </span>
+                  <span className="text-white text-sm ml-1 font-normal">AI</span>
+                </span>
+              </div>
+              <p className="text-xs text-gray-500 leading-relaxed">
+                Find your trading edge in 60 seconds with AI-powered analysis.
+              </p>
+            </div>
+
+            {/* Product Links */}
+            <div>
+              <h4 className="text-sm font-semibold text-white mb-4">Product</h4>
+              <ul className="space-y-3">
+                <li><a href="#features" className="text-xs text-gray-500 hover:text-white transition-colors">Features</a></li>
+                <li><a href="#how-it-works" className="text-xs text-gray-500 hover:text-white transition-colors">How It Works</a></li>
+                <li><a href="#pricing" className="text-xs text-gray-500 hover:text-white transition-colors">Pricing</a></li>
               </ul>
             </div>
+
+            {/* Company Links */}
             <div>
-              <h4 className="font-bold text-white mb-4 text-sm">Legal</h4>
-              <ul className="space-y-2.5">
-                <li><a href="/terms" className="text-gray-500 hover:text-white transition-colors text-sm">Terms of Service</a></li>
-                <li><a href="/privacy" className="text-gray-500 hover:text-white transition-colors text-sm">Privacy Policy</a></li>
-                <li><a href="#" className="text-gray-500 hover:text-white transition-colors text-sm">Disclaimer</a></li>
-                <li><a href="#" className="text-gray-500 hover:text-white transition-colors text-sm">Cookie Policy</a></li>
+              <h4 className="text-sm font-semibold text-white mb-4">Company</h4>
+              <ul className="space-y-3">
+                <li><a href="/terms" className="text-xs text-gray-500 hover:text-white transition-colors">Terms</a></li>
+                <li><a href="/privacy" className="text-xs text-gray-500 hover:text-white transition-colors">Privacy</a></li>
+                <li><a href="mailto:support@edgefinder.ai" className="text-xs text-gray-500 hover:text-white transition-colors">Contact</a></li>
               </ul>
             </div>
-            <div>
-              <h4 className="font-bold text-white mb-4 text-sm">Support</h4>
-              <ul className="space-y-2.5">
-                <li><a href="#" className="text-gray-500 hover:text-white transition-colors text-sm">Help Center</a></li>
-                <li><a href="#" className="text-gray-500 hover:text-white transition-colors text-sm">FAQ</a></li>
-                <li><a href="#" className="text-gray-500 hover:text-white transition-colors text-sm">Contact Support</a></li>
-                <li><a href="#" className="text-gray-500 hover:text-white transition-colors text-sm">Feature Requests</a></li>
-              </ul>
-            </div>
-            <div>
-              <h4 className="font-bold text-white mb-4 text-sm">Social Proof</h4>
-              <div className="flex items-center gap-1 mb-2">
+
+            {/* Stats */}
+            <div className="bg-white/[0.02] border border-white/[0.05] rounded-xl p-4">
+              <div className="flex items-center gap-2 mb-3">
                 {[...Array(5)].map((_, i) => (
-                  <span key={i} className="text-yellow-400">★</span>
+                  <span key={i} className="text-yellow-500 text-xs">★</span>
                 ))}
               </div>
-              <p className="text-sm text-gray-500">4.8/5 from 500+ reviews</p>
+              <p className="text-xs text-gray-400 font-medium">4.8/5 Rating</p>
+              <p className="text-xs text-gray-600">500+ traders</p>
             </div>
           </div>
-          
-          <div className="border-t border-white/[0.03] pt-8">
-            <p className="text-xs text-gray-600 mb-4">
-              EdgeFinder AI is for educational purposes only. Not financial advice. Trading involves risk of loss. Past performance does not guarantee future results. By using this tool, you acknowledge that you are solely responsible for your trading decisions.
-            </p>
-            <div className="text-gray-500 text-sm">© 2025 EdgeFinder AI. All rights reserved.</div>
+
+          {/* Bottom Bar */}
+          <div className="flex flex-col md:flex-row justify-between items-center gap-3 pt-6 border-t border-white/[0.03]">
+            <p className="text-xs text-gray-600">© 2025 EdgeFinder AI. All rights reserved.</p>
           </div>
         </div>
       </footer>
