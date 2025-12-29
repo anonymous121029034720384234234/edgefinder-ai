@@ -1,13 +1,24 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Eye, EyeOff, CheckCircle2, ArrowRight, Zap, Shield, Target, Chrome } from 'lucide-react';
+import { useSignIn, useAuth } from '@clerk/nextjs';
+import { Eye, EyeOff, Zap, Shield, Target, Chrome } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 
 export default function SignInPage() {
+  const { signIn, isLoaded } = useSignIn();
+  const { isSignedIn } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const router = useRouter();
+
+  useEffect(() => {
+    if (isSignedIn) {
+      router.push('/dashboard');
+    }
+  }, [isSignedIn, router]);
 
   const [loginData, setLoginData] = useState({
     email: '',
@@ -21,16 +32,41 @@ export default function SignInPage() {
 
   const handleLoginSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!isLoaded || !signIn) return;
+
     setError('');
     setLoading(true);
     
     try {
-      console.log('Login attempt:', loginData);
-      await new Promise(resolve => setTimeout(resolve, 1000));
-    } catch (err) {
-      setError('Invalid email or password');
+      const result = await signIn.create({
+        strategy: 'password',
+        identifier: loginData.email,
+        password: loginData.password,
+      });
+
+      if (result.status === 'complete') {
+        router.push('/');
+      } else {
+        setError('Sign in incomplete. Please try again.');
+      }
+    } catch (err: any) {
+      setError(err.errors?.[0]?.message || 'Invalid email or password');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleGoogleSignIn = async () => {
+    if (!isLoaded || !signIn) return;
+
+    try {
+      await signIn.authenticateWithRedirect({
+        strategy: 'oauth_google',
+        redirectUrl: '/sso-callback',
+        redirectUrlComplete: '/',
+      });
+    } catch (err: any) {
+      setError(err.errors?.[0]?.message || 'Google sign in failed');
     }
   };
 
@@ -246,7 +282,9 @@ export default function SignInPage() {
                   <div className="space-y-2.5">
                     <button
                       type="button"
-                      className="w-full px-4 py-3 rounded-lg bg-white/[0.05] border border-white/[0.08] hover:bg-white/[0.08] text-white text-xs font-semibold transition-all flex items-center justify-center gap-2"
+                      onClick={handleGoogleSignIn}
+                      disabled={loading}
+                      className="w-full px-4 py-3 rounded-lg bg-white/[0.05] border border-white/[0.08] hover:bg-white/[0.08] disabled:opacity-50 disabled:cursor-not-allowed text-white text-xs font-semibold transition-all flex items-center justify-center gap-2"
                     >
                       <Chrome className="w-4 h-4" />
                       Continue with Google

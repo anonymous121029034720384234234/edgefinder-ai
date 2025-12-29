@@ -1,22 +1,33 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { useSignUp, useAuth } from '@clerk/nextjs';
 import { Eye, EyeOff, CheckCircle2, ArrowRight, Zap, Shield, Target, Chrome } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 
 export default function SignUpPage() {
+  const { signUp, isLoaded, setActive } = useSignUp();
+  const { isSignedIn } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
+  const [verificationStep, setVerificationStep] = useState(false);
+  const [verificationCode, setVerificationCode] = useState('');
+  const router = useRouter();
+
+  useEffect(() => {
+    if (isSignedIn) {
+      router.push('/dashboard');
+    }
+  }, [isSignedIn, router]);
 
   const [registerData, setRegisterData] = useState({
     firstName: '',
     lastName: '',
     email: '',
     password: '',
-    confirmPassword: '',
     agreeToTerms: false,
   });
 
@@ -44,15 +55,11 @@ export default function SignUpPage() {
 
   const handleRegisterSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!isLoaded || !signUp) return;
+
     setError('');
     setLoading(true);
     
-    if (registerData.password !== registerData.confirmPassword) {
-      setError('Passwords do not match');
-      setLoading(false);
-      return;
-    }
-
     if (!allCriteriaMet) {
       setError('Password does not meet all criteria');
       setLoading(false);
@@ -66,17 +73,56 @@ export default function SignUpPage() {
     }
     
     try {
-      console.log('Registration attempt:', {
+      await signUp.create({
         firstName: registerData.firstName,
         lastName: registerData.lastName,
-        email: registerData.email,
+        emailAddress: registerData.email,
+        password: registerData.password,
       });
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      setSuccess(true);
-    } catch (err) {
-      setError('Registration failed. Please try again.');
+
+      await signUp.prepareEmailAddressVerification({ strategy: 'email_code' });
+      setVerificationStep(true);
+    } catch (err: any) {
+      setError(err.errors?.[0]?.message || 'Registration failed. Please try again.');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleVerificationSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!isLoaded || !signUp) return;
+
+    setError('');
+    setLoading(true);
+
+    try {
+      const completeSignUp = await signUp.attemptEmailAddressVerification({
+        code: verificationCode,
+      });
+
+      if (completeSignUp.status === 'complete') {
+        await setActive({ session: completeSignUp.createdSessionId });
+        setSuccess(true);
+      }
+    } catch (err: any) {
+      setError(err.errors?.[0]?.message || 'Verification failed. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleGoogleSignUp = async () => {
+    if (!isLoaded || !signUp) return;
+
+    try {
+      await signUp.authenticateWithRedirect({
+        strategy: 'oauth_google',
+        redirectUrl: '/sso-callback',
+        redirectUrlComplete: '/',
+      });
+    } catch (err: any) {
+      setError(err.errors?.[0]?.message || 'Google sign up failed');
     }
   };
 
@@ -266,174 +312,191 @@ export default function SignUpPage() {
                   </p>
                 </div>
 
-                <form onSubmit={handleRegisterSubmit} className="space-y-3">
-                  <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <label className="block text-xs font-semibold text-white mb-1.5">First Name</label>
-                      <input
-                        type="text"
-                        name="firstName"
-                        value={registerData.firstName}
-                        onChange={handleRegisterChange}
-                        placeholder="John"
-                        required
-                        className="w-full px-4 py-2.5 rounded-lg bg-white/[0.05] border border-white/[0.08] text-white placeholder-gray-600 text-sm focus:outline-none focus:border-purple-500/50 focus:ring-2 focus:ring-purple-500/20 transition-all"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-xs font-semibold text-white mb-1.5">Last Name</label>
-                      <input
-                        type="text"
-                        name="lastName"
-                        value={registerData.lastName}
-                        onChange={handleRegisterChange}
-                        placeholder="Doe"
-                        required
-                        className="w-full px-4 py-2.5 rounded-lg bg-white/[0.05] border border-white/[0.08] text-white placeholder-gray-600 text-sm focus:outline-none focus:border-purple-500/50 focus:ring-2 focus:ring-purple-500/20 transition-all"
-                      />
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-semibold text-white mb-1.5">Email</label>
-                    <input
-                      type="email"
-                      name="email"
-                      value={registerData.email}
-                      onChange={handleRegisterChange}
-                      placeholder="you@example.com"
-                      required
-                      className="w-full px-4 py-2.5 rounded-lg bg-white/[0.05] border border-white/[0.08] text-white placeholder-gray-600 text-sm focus:outline-none focus:border-purple-500/50 focus:ring-2 focus:ring-purple-500/20 transition-all"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-semibold text-white mb-1.5">Password</label>
-                    <div className="relative">
-                      <input
-                        type={showPassword ? 'text' : 'password'}
-                        name="password"
-                        value={registerData.password}
-                        onChange={handleRegisterChange}
-                        placeholder="••••••••"
-                        required
-                        className="w-full px-4 py-2.5 rounded-lg bg-white/[0.05] border border-white/[0.08] text-white placeholder-gray-600 text-sm focus:outline-none focus:border-purple-500/50 focus:ring-2 focus:ring-purple-500/20 transition-all pr-10"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => setShowPassword(!showPassword)}
-                        className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white transition-colors"
-                      >
-                        {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                      </button>
-                    </div>
-                    <div className="mt-3">
-                      <div className="flex items-center justify-between mb-1.5">
-                        <label className="text-xs font-semibold text-gray-400">Password Strength</label>
-                        <span className={`text-xs font-semibold ${
-                          passwordStrength === 0 ? 'text-gray-500' :
-                          passwordStrength < 25 ? 'text-red-400' :
-                          passwordStrength < 50 ? 'text-orange-400' :
-                          passwordStrength < 75 ? 'text-yellow-400' :
-                          'text-green-400'
-                        }`}>
-                          {passwordStrength === 0 ? 'No password' :
-                           passwordStrength < 25 ? 'Weak' :
-                           passwordStrength < 50 ? 'Fair' :
-                           passwordStrength < 75 ? 'Good' :
-                           'Strong'}
-                        </span>
-                      </div>
-                      <div className="w-full h-2 rounded-full bg-white/[0.05] border border-white/[0.08] overflow-hidden">
-                        <div 
-                          className="h-full transition-all duration-300 ease-out rounded-full"
-                          style={{
-                            width: `${passwordStrength}%`,
-                            background: passwordStrength === 0 ? 'transparent' :
-                                        passwordStrength < 25 ? 'linear-gradient(90deg, #ef4444, #f87171)' :
-                                        passwordStrength < 50 ? 'linear-gradient(90deg, #f97316, #fb923c)' :
-                                        passwordStrength < 75 ? 'linear-gradient(90deg, #eab308, #facc15)' :
-                                        'linear-gradient(90deg, #22c55e, #4ade80)'
-                          }}
+                <form onSubmit={verificationStep ? handleVerificationSubmit : handleRegisterSubmit} className={verificationStep ? "space-y-4" : "space-y-3"}>
+                  {verificationStep ? (
+                    <>
+                      <div>
+                        <label className="block text-xs font-semibold text-white mb-1.5">Verification Code</label>
+                        <p className="text-xs text-gray-500 mb-2">Enter the code sent to {registerData.email}</p>
+                        <input
+                          type="text"
+                          value={verificationCode}
+                          onChange={(e) => setVerificationCode(e.target.value)}
+                          placeholder="000000"
+                          required
+                          className="w-full px-4 py-2.5 rounded-lg bg-white/[0.05] border border-white/[0.08] text-white placeholder-gray-600 text-sm focus:outline-none focus:border-purple-500/50 focus:ring-2 focus:ring-purple-500/20 transition-all text-center tracking-widest"
                         />
                       </div>
-                    </div>
-                  </div>
 
-                  <div>
-                    <label className="block text-xs font-semibold text-white mb-1.5">Confirm Password</label>
-                    <div className="relative">
-                      <input
-                        type={showConfirmPassword ? 'text' : 'password'}
-                        name="confirmPassword"
-                        value={registerData.confirmPassword}
-                        onChange={handleRegisterChange}
-                        placeholder="••••••••"
-                        required
-                        className="w-full px-4 py-2.5 rounded-lg bg-white/[0.05] border border-white/[0.08] text-white placeholder-gray-600 text-sm focus:outline-none focus:border-purple-500/50 focus:ring-2 focus:ring-purple-500/20 transition-all pr-10"
-                      />
+                      {error && (
+                        <div className="p-3 rounded-lg bg-red-500/10 border border-red-500/20">
+                          <p className="text-xs text-red-400 font-semibold">{error}</p>
+                        </div>
+                      )}
+
                       <button
-                        type="button"
-                        onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                        className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white transition-colors"
+                        type="submit"
+                        disabled={loading}
+                        className="w-full py-3 rounded-lg bg-gradient-to-r from-violet-600 via-purple-600 to-fuchsia-600 hover:shadow-lg hover:shadow-purple-600/30 text-white text-sm font-bold transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                       >
-                        {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                        {loading ? 'Verifying...' : 'Verify Email'}
                       </button>
-                    </div>
-                  </div>
+                    </>
+                  ) : (
+                    <>
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <label className="block text-xs font-semibold text-white mb-1.5">First Name</label>
+                          <input
+                            type="text"
+                            name="firstName"
+                            value={registerData.firstName}
+                            onChange={handleRegisterChange}
+                            placeholder="John"
+                            required
+                            className="w-full px-4 py-2.5 rounded-lg bg-white/[0.05] border border-white/[0.08] text-white placeholder-gray-600 text-sm focus:outline-none focus:border-purple-500/50 focus:ring-2 focus:ring-purple-500/20 transition-all"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs font-semibold text-white mb-1.5">Last Name</label>
+                          <input
+                            type="text"
+                            name="lastName"
+                            value={registerData.lastName}
+                            onChange={handleRegisterChange}
+                            placeholder="Doe"
+                            required
+                            className="w-full px-4 py-2.5 rounded-lg bg-white/[0.05] border border-white/[0.08] text-white placeholder-gray-600 text-sm focus:outline-none focus:border-purple-500/50 focus:ring-2 focus:ring-purple-500/20 transition-all"
+                          />
+                        </div>
+                      </div>
 
-                  <div className="flex items-start gap-3 pt-2">
-                    <input
-                      type="checkbox"
-                      name="agreeToTerms"
-                      checked={registerData.agreeToTerms}
-                      onChange={handleRegisterChange}
-                      className="mt-0.5 w-4 h-4 rounded border border-white/[0.08] bg-white/[0.05] accent-purple-600 cursor-pointer flex-shrink-0"
-                    />
-                    <label className="text-xs text-gray-400 leading-relaxed flex-1">
-                      I agree to EdgeFinder's{' '}
-                      <a href="/terms" className="text-purple-400 hover:text-purple-300 transition-colors font-semibold">Terms</a>
-                      {' '}and{' '}
-                      <a href="/privacy" className="text-purple-400 hover:text-purple-300 transition-colors font-semibold">Privacy Policy</a>
-                    </label>
-                  </div>
+                      <div>
+                        <label className="block text-xs font-semibold text-white mb-1.5">Email</label>
+                        <input
+                          type="email"
+                          name="email"
+                          value={registerData.email}
+                          onChange={handleRegisterChange}
+                          placeholder="you@example.com"
+                          required
+                          className="w-full px-4 py-2.5 rounded-lg bg-white/[0.05] border border-white/[0.08] text-white placeholder-gray-600 text-sm focus:outline-none focus:border-purple-500/50 focus:ring-2 focus:ring-purple-500/20 transition-all"
+                        />
+                      </div>
 
-                  {error && (
-                    <div className="p-3 rounded-lg bg-red-500/10 border border-red-500/20">
-                      <p className="text-xs text-red-400 font-semibold">{error}</p>
-                    </div>
+                      <div>
+                        <label className="block text-xs font-semibold text-white mb-1.5">Password</label>
+                        <div className="relative">
+                          <input
+                            type={showPassword ? 'text' : 'password'}
+                            name="password"
+                            value={registerData.password}
+                            onChange={handleRegisterChange}
+                            placeholder="••••••••"
+                            required
+                            className="w-full px-4 py-2.5 rounded-lg bg-white/[0.05] border border-white/[0.08] text-white placeholder-gray-600 text-sm focus:outline-none focus:border-purple-500/50 focus:ring-2 focus:ring-purple-500/20 transition-all pr-10"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => setShowPassword(!showPassword)}
+                            className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white transition-colors"
+                          >
+                            {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                          </button>
+                        </div>
+                        <div className="mt-3">
+                          <div className="flex items-center justify-between mb-1.5">
+                            <label className="text-xs font-semibold text-gray-400">Password Strength</label>
+                            <span className={`text-xs font-semibold ${
+                              passwordStrength === 0 ? 'text-gray-500' :
+                              passwordStrength < 25 ? 'text-red-400' :
+                              passwordStrength < 50 ? 'text-orange-400' :
+                              passwordStrength < 75 ? 'text-yellow-400' :
+                              'text-green-400'
+                            }`}>
+                              {passwordStrength === 0 ? 'No password' :
+                               passwordStrength < 25 ? 'Weak' :
+                               passwordStrength < 50 ? 'Fair' :
+                               passwordStrength < 75 ? 'Good' :
+                               'Strong'}
+                            </span>
+                          </div>
+                          <div className="w-full h-2 rounded-full bg-white/[0.05] border border-white/[0.08] overflow-hidden">
+                            <div 
+                              className="h-full transition-all duration-300 ease-out rounded-full"
+                              style={{
+                                width: `${passwordStrength}%`,
+                                background: passwordStrength === 0 ? 'transparent' :
+                                            passwordStrength < 25 ? 'linear-gradient(90deg, #ef4444, #f87171)' :
+                                            passwordStrength < 50 ? 'linear-gradient(90deg, #f97316, #fb923c)' :
+                                            passwordStrength < 75 ? 'linear-gradient(90deg, #eab308, #facc15)' :
+                                            'linear-gradient(90deg, #22c55e, #4ade80)'
+                              }}
+                            />
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="flex items-start gap-3 pt-2">
+                        <input
+                          type="checkbox"
+                          name="agreeToTerms"
+                          checked={registerData.agreeToTerms}
+                          onChange={handleRegisterChange}
+                          className="mt-0.5 w-4 h-4 rounded border border-white/[0.08] bg-white/[0.05] accent-purple-600 cursor-pointer flex-shrink-0"
+                        />
+                        <label className="text-xs text-gray-400 leading-relaxed flex-1">
+                          I agree to EdgeFinder's{' '}
+                          <a href="/terms" className="text-purple-400 hover:text-purple-300 transition-colors font-semibold">Terms</a>
+                          {' '}and{' '}
+                          <a href="/privacy" className="text-purple-400 hover:text-purple-300 transition-colors font-semibold">Privacy Policy</a>
+                        </label>
+                      </div>
+
+                      {error && (
+                        <div className="p-3 rounded-lg bg-red-500/10 border border-red-500/20">
+                          <p className="text-xs text-red-400 font-semibold">{error}</p>
+                        </div>
+                      )}
+
+                      <div className="flex justify-center py-2">
+                        <div id="clerk-captcha" />
+                      </div>
+
+                      <button
+                        type="submit"
+                        disabled={loading}
+                        className="w-full py-3 rounded-lg bg-gradient-to-r from-violet-600 via-purple-600 to-fuchsia-600 hover:shadow-lg hover:shadow-purple-600/30 text-white text-sm font-bold transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        {loading ? 'Creating account...' : 'Create Account'}
+                      </button>
+
+                      <div className="relative flex items-center justify-center my-3">
+                        <div className="absolute inset-0 flex items-center">
+                          <div className="w-full border-t border-white/[0.08]"></div>
+                        </div>
+                        <div className="relative flex justify-center text-xs">
+                          <span className="px-2 bg-[#080808] text-gray-500 font-semibold">OR</span>
+                        </div>
+                      </div>
+
+                      <div className="space-y-2">
+                        <button
+                          type="button"
+                          onClick={handleGoogleSignUp}
+                          disabled={loading}
+                          className="w-full px-4 py-3 rounded-lg bg-white/[0.05] border border-white/[0.08] hover:bg-white/[0.08] disabled:opacity-50 disabled:cursor-not-allowed text-white text-xs font-semibold transition-all flex items-center justify-center gap-2"
+                        >
+                          <Chrome className="w-4 h-4" />
+                          Sign up with Google
+                        </button>
+                      </div>
+
+                      <p className="text-center text-xs text-gray-500 pt-2">
+                        No credit card • 7-day trial • Cancel anytime
+                      </p>
+                    </>
                   )}
-
-                  <button
-                    type="submit"
-                    disabled={loading}
-                    className="w-full py-3 rounded-lg bg-gradient-to-r from-violet-600 via-purple-600 to-fuchsia-600 hover:shadow-lg hover:shadow-purple-600/30 text-white text-sm font-bold transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    {loading ? 'Creating account...' : 'Create Account'}
-                  </button>
-
-                  <div className="relative flex items-center justify-center my-3">
-                    <div className="absolute inset-0 flex items-center">
-                      <div className="w-full border-t border-white/[0.08]"></div>
-                    </div>
-                    <div className="relative flex justify-center text-xs">
-                      <span className="px-2 bg-[#080808] text-gray-500 font-semibold">OR</span>
-                    </div>
-                  </div>
-
-                  <div className="space-y-2">
-                    <button
-                      type="button"
-                      className="w-full px-4 py-3 rounded-lg bg-white/[0.05] border border-white/[0.08] hover:bg-white/[0.08] text-white text-xs font-semibold transition-all flex items-center justify-center gap-2"
-                    >
-                      <Chrome className="w-4 h-4" />
-                      Sign up with Google
-                    </button>
-                  </div>
-
-                  <p className="text-center text-xs text-gray-500 pt-2">
-                    No credit card • 7-day trial • Cancel anytime
-                  </p>
                 </form>
               </div>
             </div>
