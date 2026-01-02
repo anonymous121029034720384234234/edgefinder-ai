@@ -119,7 +119,7 @@ export default function SignUpPage() {
       await signUp.authenticateWithRedirect({
         strategy: 'oauth_google',
         redirectUrl: '/sso-callback',
-        redirectUrlComplete: '/',
+        redirectUrlComplete: '/dashboard',
       });
     } catch (err: any) {
       setError(err.errors?.[0]?.message || 'Google sign up failed');
@@ -156,10 +156,10 @@ export default function SignUpPage() {
             Your account has been successfully created. Check your email to verify your account and start discovering your trading edge in 60 seconds.
           </p>
           <Link
-            href="/"
+            href="/dashboard"
             className="inline-flex items-center gap-2 px-8 py-4 rounded-lg bg-white hover:bg-gray-100 text-black text-base font-bold transition-all"
           >
-            Back to Home
+            Go to Dashboard
             <ArrowRight className="w-5 h-5" />
           </Link>
         </div>

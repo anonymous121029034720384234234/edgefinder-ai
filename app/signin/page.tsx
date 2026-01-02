@@ -45,7 +45,7 @@ export default function SignInPage() {
       });
 
       if (result.status === 'complete') {
-        router.push('/');
+        router.push('/dashboard');
       } else {
         setError('Sign in incomplete. Please try again.');
       }

@@ -15,8 +15,8 @@ export default function SSOCallback() {
       
       try {
         // Clerk handles the callback automatically
-        // Just redirect to home
-        router.push('/');
+        // Just redirect to dashboard
+        router.push('/dashboard');
       } catch (err) {
         console.error('SSO callback error:', err);
         router.push('/signin');
