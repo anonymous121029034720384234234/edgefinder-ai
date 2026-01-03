@@ -2,7 +2,8 @@
 
 import { useState } from 'react';
 import { useAuth, useUser, SignOutButton } from '@clerk/nextjs';
-import { Upload, TrendingUp, TrendingDown, BarChart3, Target, Shield, Zap, X, DollarSign, Percent, AlertTriangle, CheckCircle2, Home, LogOut, Settings, Menu, Download, FileText, PieChart, Calendar, BookOpen, Bell } from 'lucide-react';
+import { Upload, TrendingUp, TrendingDown, BarChart3, Target, Shield, Zap, DollarSign, Percent, AlertTriangle, CheckCircle2, Home, LogOut, Settings, Menu, Download, FileText, PieChart, Calendar, BookOpen, Bell } from 'lucide-react';
+import UploadModal from '@/app/components/UploadModal';
 
 export default function Dashboard() {
   const { isLoaded: authLoaded } = useAuth();
@@ -11,6 +12,7 @@ export default function Dashboard() {
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [hoveredDay, setHoveredDay] = useState<number | null>(null);
+  const [isDragOver, setIsDragOver] = useState(false);
 
   // If not loaded, show loading state
   if (!authLoaded || !userLoaded) {
@@ -151,8 +153,37 @@ export default function Dashboard() {
     { symbol: 'MSFT', pnl: '-$180', result: 'loss', time: '3:05 PM', winRate: '62%' },
   ];
 
+  // Drag and drop handlers
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragOver(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragOver(false);
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragOver(false);
+    
+    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+      setUploadedFile(e.dataTransfer.files[0]);
+      setShowUploadModal(true);
+    }
+  };
+
   return (
-    <div className="min-h-screen bg-[#080808] flex">
+    <div 
+      className="min-h-screen bg-[#080808] flex"
+      onDragOver={handleDragOver}
+      onDragLeave={handleDragLeave}
+      onDrop={handleDrop}
+    >
       <style jsx>{`
         @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&display=swap');
         * {
@@ -180,6 +211,32 @@ export default function Dashboard() {
         />
       </div>
 
+      {/* Drag and Drop Overlay */}
+      {isDragOver && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center pointer-events-none">
+          <div className="max-w-md w-full mx-4 p-8 rounded-2xl bg-[#0a0a0a] border border-purple-500/30 text-center">
+            <Upload className="w-14 h-14 mx-auto mb-4 text-purple-400" />
+            <h2 className="text-xl font-bold text-white mb-2">Drop your file here</h2>
+            <p className="text-sm text-gray-400 mb-6">CSV, XLSX, or XLS</p>
+            
+            <div className="space-y-3 bg-white/[0.03] rounded-lg p-4 border border-white/[0.05]">
+              <div className="flex items-start gap-3">
+                <CheckCircle2 className="w-4 h-4 text-green-400 mt-0.5 flex-shrink-0" />
+                <span className="text-xs text-gray-300">Upload your trade history</span>
+              </div>
+              <div className="flex items-start gap-3">
+                <CheckCircle2 className="w-4 h-4 text-green-400 mt-0.5 flex-shrink-0" />
+                <span className="text-xs text-gray-300">Get instant performance analysis</span>
+              </div>
+              <div className="flex items-start gap-3">
+                <CheckCircle2 className="w-4 h-4 text-green-400 mt-0.5 flex-shrink-0" />
+                <span className="text-xs text-gray-300">Unlock your trading edge</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Sidebar */}
       <aside className={`fixed left-0 top-0 h-screen w-64 bg-black/40 backdrop-blur-xl border-r border-white/[0.06] z-40 transition-transform ${
         sidebarOpen ? 'translate-x-0' : '-translate-x-full'
@@ -203,11 +260,11 @@ export default function Dashboard() {
 
         {/* Navigation */}
         <nav className="flex-1 px-3 py-4 space-y-1">
-          <a href="#" className="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-white/[0.08] border border-white/[0.12] text-white font-medium text-sm backdrop-blur-sm">
+          <a href="/dashboard" className="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-white/[0.08] border border-white/[0.12] text-white font-medium text-sm backdrop-blur-sm">
             <Home className="w-5 h-5" />
             <span>Dashboard</span>
           </a>
-          <a href="#" className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-gray-400 hover:text-white hover:bg-white/[0.04] font-medium text-sm transition-all">
+          <a href="/analytics" className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-gray-400 hover:text-white hover:bg-white/[0.04] font-medium text-sm transition-all">
             <BarChart3 className="w-5 h-5" />
             <span>Analytics</span>
           </a>
@@ -215,22 +272,19 @@ export default function Dashboard() {
             <TrendingUp className="w-5 h-5" />
             <span>Trades</span>
           </a>
-          <a href="#" className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-gray-400 hover:text-white hover:bg-white/[0.04] font-medium text-sm transition-all">
-            <PieChart className="w-5 h-5" />
-            <span>Portfolio</span>
+          <a href="/upload" className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-gray-400 hover:text-white hover:bg-white/[0.04] font-medium text-sm transition-all">
+            <Upload className="w-5 h-5" />
+            <span>Upload</span>
           </a>
-          <a href="#" className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-gray-400 hover:text-white hover:bg-white/[0.04] font-medium text-sm transition-all">
-            <Calendar className="w-5 h-5" />
-            <span>Journal</span>
-          </a>
-          <a href="#" className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-gray-400 hover:text-white hover:bg-white/[0.04] font-medium text-sm transition-all">
-            <BookOpen className="w-5 h-5" />
-            <span>Playbooks</span>
-          </a>
-          <a href="#" className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-gray-400 hover:text-white hover:bg-white/[0.04] font-medium text-sm transition-all">
-            <FileText className="w-5 h-5" />
-            <span>Reports</span>
-          </a>
+          <div className="pt-1 mt-1">
+            <a href="#" className="relative group block overflow-visible">
+              <div className="absolute -inset-0.5 bg-gradient-to-r from-violet-500 via-pink-500 to-orange-500 rounded-lg opacity-50 group-hover:opacity-70 blur-sm transition-all duration-300"></div>
+              <div className="relative flex items-center gap-3 px-3 py-2.5 rounded-lg bg-black/90 border border-white/[0.15] group-hover:border-white/[0.25] transition-all backdrop-blur-sm">
+                <Zap className="w-5 h-5 text-white" />
+                <span className="text-white font-semibold text-sm">AI Assistant</span>
+              </div>
+            </a>
+          </div>
           <a href="#" className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-gray-400 hover:text-white hover:bg-white/[0.04] font-medium text-sm transition-all">
             <Settings className="w-5 h-5" />
             <span>Settings</span>
@@ -849,72 +903,12 @@ export default function Dashboard() {
       </main>
 
       {/* Upload Modal */}
-      {showUploadModal && (
-        <div className="fixed inset-0 bg-black/70 backdrop-blur-md z-50 flex items-center justify-center p-4">
-          <div className="relative max-w-lg w-full p-8 rounded-2xl bg-[#0a0a0a] border border-white/[0.12]">
-            <button
-              onClick={() => {
-                setShowUploadModal(false);
-                setUploadedFile(null);
-              }}
-              className="absolute top-6 right-6 w-8 h-8 rounded-lg bg-white/[0.05] hover:bg-white/[0.10] border border-white/[0.08] flex items-center justify-center transition-all"
-            >
-              <X className="w-4 h-4 text-gray-400" />
-            </button>
-
-            <div className="mb-6">
-              <h2 className="text-xl font-bold text-white mb-1">Upload Trades</h2>
-              <p className="text-sm text-gray-500">CSV, XLSX, or XLS format • Get insights in 60 seconds</p>
-            </div>
-
-            <div className="p-8 rounded-xl border-2 border-dashed border-white/[0.12] bg-white/[0.02] backdrop-blur-sm text-center mb-6 hover:border-purple-500/40 hover:bg-purple-500/5 transition-all">
-              <input
-                type="file"
-                id="file-upload-modal"
-                className="hidden"
-                accept=".csv,.xlsx,.xls"
-                onChange={(e) => {
-                  if (e.target.files && e.target.files[0]) {
-                    setUploadedFile(e.target.files[0]);
-                  }
-                }}
-              />
-              
-              <label htmlFor="file-upload-modal" className="cursor-pointer">
-                {uploadedFile ? (
-                  <>
-                    <div className="text-4xl mb-3">📄</div>
-                    <h3 className="text-base font-bold text-white mb-1">{uploadedFile?.name}</h3>
-                    <p className="text-sm text-gray-500 mb-4">Ready to analyze • Click to change</p>
-                  </>
-                ) : (
-                  <>
-                    <Upload className="w-10 h-10 mx-auto mb-3 text-gray-500" />
-                    <h3 className="text-base font-bold text-white mb-1">Drop your file here</h3>
-                    <p className="text-sm text-gray-500 mb-4">or click to browse your files</p>
-                  </>
-                )}
-                <button className="px-5 py-2 rounded-lg bg-white/[0.08] hover:bg-white/[0.12] border border-white/[0.08] text-white font-medium transition-all text-sm">
-                  {uploadedFile ? 'Change File' : 'Choose File'}
-                </button>
-              </label>
-            </div>
-
-            {uploadedFile && (
-              <button className="w-full px-6 py-3 rounded-lg bg-gradient-to-r from-violet-600 via-purple-600 to-fuchsia-600 hover:shadow-lg hover:shadow-purple-600/30 text-white font-semibold transition-all">
-                Analyze Trades →
-              </button>
-            )}
-
-            <div className="mt-6 text-center">
-              <a href="#" className="inline-flex items-center gap-2 text-sm text-purple-400 hover:text-purple-300 font-medium transition-colors">
-                <Download className="w-4 h-4" />
-                Download CSV Template
-              </a>
-            </div>
-          </div>
-        </div>
-      )}
+      <UploadModal 
+        isOpen={showUploadModal}
+        onClose={() => setShowUploadModal(false)}
+        uploadedFile={uploadedFile}
+        onFileChange={setUploadedFile}
+      />
     </div>
   );
 }
