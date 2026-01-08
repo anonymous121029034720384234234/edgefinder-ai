@@ -2,10 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@clerk/nextjs/server'
 import { createClient } from '@supabase/supabase-js'
 
-export async function GET(
-  request: NextRequest,
-  { params }: { params: { uploadId: string } }
-) {
+export async function GET(request: NextRequest) {
   try {
     const { userId } = await auth()
 
@@ -28,27 +25,32 @@ export async function GET(
 
     const supabase = createClient(supabaseUrl, supabaseServiceKey)
 
-    // First verify the upload belongs to this user
-    const { data: upload, error: uploadError } = await supabase
+    // Get all uploads for this user
+    const { data: uploads, error: uploadsError } = await supabase
       .from('uploads')
       .select('id')
-      .eq('id', params.uploadId)
       .eq('clerk_user_id', userId)
-      .single()
 
-    if (uploadError || !upload) {
+    if (uploadsError) {
+      console.error('Error fetching uploads:', uploadsError)
       return NextResponse.json(
-        { error: 'Upload not found or unauthorized' },
-        { status: 404 }
+        { error: 'Failed to fetch uploads' },
+        { status: 500 }
       )
     }
 
-    // Get trades for this upload
+    const uploadIds = uploads?.map(u => u.id) || []
+
+    if (uploadIds.length === 0) {
+      return NextResponse.json({ trades: [] }, { status: 200 })
+    }
+
+    // Get all trades from these uploads
     const { data: trades, error: tradesError } = await supabase
       .from('trades')
       .select('*')
-      .eq('upload_id', params.uploadId)
-      .order('trade_date', { ascending: true })
+      .in('upload_id', uploadIds)
+      .order('trade_date', { ascending: false })
 
     if (tradesError) {
       console.error('Error fetching trades:', tradesError)
@@ -58,7 +60,7 @@ export async function GET(
       )
     }
 
-    return NextResponse.json({ trades }, { status: 200 })
+    return NextResponse.json({ trades: trades || [] }, { status: 200 })
   } catch (error) {
     console.error('Error:', error)
     return NextResponse.json(

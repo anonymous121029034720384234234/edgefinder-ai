@@ -33,6 +33,7 @@ CREATE TABLE IF NOT EXISTS transactions (
   side TEXT, -- BUY or SELL
   quantity DECIMAL(18, 8),
   price DECIMAL(18, 8),
+  net_price DECIMAL(18, 8), -- Net price after adjustments (if available)
   commission DECIMAL(18, 8) DEFAULT 0,
   exec_time TIMESTAMP,
   raw_data JSONB, -- Store the original transaction data

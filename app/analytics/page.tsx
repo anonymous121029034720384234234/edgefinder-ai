@@ -1,9 +1,17 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useAuth, useUser, SignOutButton } from '@clerk/nextjs'
-import { Home, BarChart3, TrendingUp, Upload, Zap, Settings, LogOut, Menu, Bell, Download, CheckCircle2, ArrowRight, Sparkles, Target, Clock, Brain, TrendingDown } from 'lucide-react'
+import { Home, BarChart3, TrendingUp, Upload, Zap, Settings, LogOut, Menu, Bell, Download, CheckCircle2, ArrowRight, Sparkles, Target, Clock, Brain, TrendingDown, FileText, Calendar, Hash, Loader2, ChevronRight } from 'lucide-react'
 import UploadModal from '@/app/components/UploadModal'
+
+interface UploadedFile {
+  id: string
+  filename: string
+  trade_count: number
+  status: string
+  created_at: string
+}
 
 export default function AnalyticsPage() {
   const { isLoaded: authLoaded } = useAuth()
@@ -12,6 +20,28 @@ export default function AnalyticsPage() {
   const [showUploadModal, setShowUploadModal] = useState(false)
   const [uploadedFile, setUploadedFile] = useState<File | null>(null)
   const [isDragOver, setIsDragOver] = useState(false)
+  const [uploads, setUploads] = useState<UploadedFile[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    if (userLoaded) {
+      fetchUploads()
+    }
+  }, [userLoaded])
+
+  const fetchUploads = async () => {
+    try {
+      const response = await fetch('/api/uploads')
+      if (response.ok) {
+        const data = await response.json()
+        setUploads(data.uploads || [])
+      }
+    } catch (error) {
+      console.error('Error fetching uploads:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
 
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault()
@@ -35,8 +65,6 @@ export default function AnalyticsPage() {
       setShowUploadModal(true)
     }
   }
-
-  const uploadedFiles: any[] = []
 
   if (!authLoaded || !userLoaded) {
     return (
@@ -145,7 +173,7 @@ export default function AnalyticsPage() {
             <BarChart3 className="w-5 h-5" />
             <span>Analytics</span>
           </a>
-          <a href="#" className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-gray-400 hover:text-white hover:bg-white/[0.04] font-medium text-sm transition-all">
+          <a href="/trades" className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-gray-400 hover:text-white hover:bg-white/[0.04] font-medium text-sm transition-all">
             <TrendingUp className="w-5 h-5" />
             <span>Trades</span>
           </a>
@@ -230,10 +258,17 @@ export default function AnalyticsPage() {
         </div>
 
         {/* Content Area */}
-        <div className="flex-1 overflow-hidden">
-          <div className="h-full flex items-center justify-center p-6 md:p-8">
-            {uploadedFiles.length === 0 ? (
-              <div className="max-w-4xl w-full">
+        <div className="flex-1 overflow-y-auto">
+          <div className="p-6 md:p-8">
+            {loading ? (
+              <div className="flex items-center justify-center h-64">
+                <div className="flex flex-col items-center gap-3">
+                  <Loader2 className="w-8 h-8 text-purple-400 animate-spin" />
+                  <p className="text-gray-400">Loading your uploads...</p>
+                </div>
+              </div>
+            ) : uploads.length === 0 ? (
+              <div className="max-w-4xl w-full mx-auto">
                 {/* Hero Section */}
                 <div className="text-center mb-8">
                   <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/[0.03] border border-white/[0.08] mb-5">
@@ -350,16 +385,95 @@ export default function AnalyticsPage() {
               </div>
             ) : (
               <div>
-                <h2 className="text-2xl font-bold text-white mb-6">Your Uploads</h2>
-                <div className="grid gap-4">
-                  {uploadedFiles.map((file, index) => (
-                    <div 
-                      key={index}
-                      className="bg-white/[0.05] border border-white/[0.06] rounded-lg p-6 hover:bg-white/[0.08] transition-all cursor-pointer group"
+                <div className="flex items-center justify-between mb-8">
+                  <div>
+                    <h2 className="text-3xl font-bold text-white mb-1">Your Uploads</h2>
+                    <p className="text-gray-400 text-sm">Manage and analyze your trade history</p>
+                  </div>
+                  <button 
+                    onClick={() => setShowUploadModal(true)}
+                    className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-gradient-to-r from-violet-600 to-purple-600 hover:shadow-lg hover:shadow-purple-600/40 text-white font-semibold transition-all"
+                  >
+                    <Upload className="w-4 h-4" />
+                    New Upload
+                  </button>
+                </div>
+
+                {/* Uploads List */}
+                <div className="space-y-3">
+                  {uploads.map((upload) => {
+                    const uploadDate = new Date(upload.created_at)
+                    const isRecent = (Date.now() - uploadDate.getTime()) < 24 * 60 * 60 * 1000
+                    
+                    return (
+                      <div 
+                        key={upload.id}
+                        className="group bg-white/[0.02] border border-white/[0.06] rounded-xl p-5 hover:bg-white/[0.05] hover:border-white/[0.1] transition-all"
+                      >
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-4 flex-1">
+                            <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-purple-500/20 to-blue-500/20 border border-purple-500/30 flex items-center justify-center flex-shrink-0">
+                              <FileText className="w-6 h-6 text-purple-400" />
+                            </div>
+                            
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2 mb-1">
+                                <h3 className="text-white font-semibold truncate">{upload.filename}</h3>
+                                {isRecent && (
+                                  <span className="px-2 py-0.5 rounded-full bg-green-500/20 border border-green-500/30 text-xs font-semibold text-green-400 flex-shrink-0">
+                                    New
+                                  </span>
+                                )}
+                                {upload.status === 'parsed' && (
+                                  <span className="px-2 py-0.5 rounded-full bg-blue-500/20 border border-blue-500/30 text-xs font-semibold text-blue-400 flex-shrink-0">
+                                    Ready
+                                  </span>
+                                )}
+                              </div>
+                              
+                              <div className="flex items-center gap-3 text-xs text-gray-400">
+                                <div className="flex items-center gap-1">
+                                  <Hash className="w-3.5 h-3.5" />
+                                  <span>{upload.trade_count} trades</span>
+                                </div>
+                                <div className="w-1 h-1 rounded-full bg-gray-600"></div>
+                                <div className="flex items-center gap-1">
+                                  <Calendar className="w-3.5 h-3.5" />
+                                  <span>
+                                    {uploadDate.toLocaleDateString('en-US', { 
+                                      month: 'short', 
+                                      day: 'numeric',
+                                      hour: '2-digit',
+                                      minute: '2-digit'
+                                    })}
+                                  </span>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                          
+                          <ChevronRight className="w-5 h-5 text-gray-500 group-hover:text-gray-300 transition-colors ml-4 flex-shrink-0" />
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
+
+                {/* Upload More Section */}
+                <div className="mt-8 p-6 rounded-xl border border-dashed border-white/[0.1] bg-white/[0.01]">
+                  <div className="text-center">
+                    <Upload className="w-8 h-8 text-gray-500 mx-auto mb-3" />
+                    <h3 className="text-white font-semibold mb-2">Upload More Trades</h3>
+                    <p className="text-gray-400 text-sm mb-4">
+                      Add more trade history to get more comprehensive insights
+                    </p>
+                    <button 
+                      onClick={() => setShowUploadModal(true)}
+                      className="px-4 py-2 rounded-lg bg-white/[0.05] hover:bg-white/[0.1] text-white font-semibold transition-all"
                     >
-                      {/* File display code */}
-                    </div>
-                  ))}
+                      Upload Additional Trades
+                    </button>
+                  </div>
                 </div>
               </div>
             )}

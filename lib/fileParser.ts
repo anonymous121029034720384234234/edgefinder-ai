@@ -12,6 +12,7 @@ export interface ParsedTrade {
   commission: number
   platform?: string
   raw_price?: number
+  raw_net_price?: number
   raw_buy_data?: any
   raw_sell_data?: any
   [key: string]: any
@@ -24,6 +25,7 @@ const COLUMN_MAPPINGS = {
   side: ['side', 'action', 'b/s', 'type', 'direction', 'order_type', 'action_type'],
   quantity: ['quantity', 'qty', 'filled_qty', 'shares', 'contracts', 'order_quantity', 'processed_quantity'],
   price: ['price', 'filled_price', 'exec_price', 'average_price', 'net price', 't. price', 'c. price'],
+  net_price: ['net price', 'net_price', 'adjusted_price'],
   commission: ['commission', 'comm', 'fees', 'comm/fee', 'fee'],
   pnl: ['pnl', 'realized_pnl', 'realized p/l', 'net_amount', 'proceeds', 'amount', 'mtm p/l'],
   time: ['time', 'exec time', 'order_time', 'datetime'],
@@ -174,6 +176,7 @@ function normalizeTradeData(row: Record<string, any>, platform: string): ParsedT
   const sideRaw = findField(row, COLUMN_MAPPINGS.side)
   const quantityRaw = findField(row, COLUMN_MAPPINGS.quantity)
   const priceRaw = findField(row, COLUMN_MAPPINGS.price)
+  const netPriceRaw = findField(row, COLUMN_MAPPINGS.net_price)
   const commissionRaw = findField(row, COLUMN_MAPPINGS.commission)
   const pnlRaw = findField(row, COLUMN_MAPPINGS.pnl)
 
@@ -181,6 +184,7 @@ function normalizeTradeData(row: Record<string, any>, platform: string): ParsedT
   const side = parseSide(sideRaw)
   const quantity = parseNumeric(quantityRaw)
   const price = parseNumeric(priceRaw)
+  const netPrice = parseNumeric(netPriceRaw)
   const commission = parseNumeric(commissionRaw)
   const pnl = parseNumeric(pnlRaw)
 
@@ -196,6 +200,7 @@ function normalizeTradeData(row: Record<string, any>, platform: string): ParsedT
     commission,
     platform,
     raw_price: price, // Store actual price for matching
+    raw_net_price: netPrice > 0 ? netPrice : undefined, // Store net price if available
     ...row,
   }
 }
@@ -313,21 +318,23 @@ function matchTradesAndCalculatePnL(transactions: ParsedTrade[]): ParsedTrade[] 
         const buyTx = pendingBuys[symbol].shift()!
         
         // Create a completed trade from the BUY/SELL pair
-        const entryPrice = buyTx.raw_price || Number(buyTx.entry_price) || 0
-        const exitPrice = tx.raw_price || Number(tx.exit_price) || 0
+        // Use net_price if available (includes commission), otherwise fall back to raw_price
+        const entryPrice = (buyTx.raw_net_price !== undefined && buyTx.raw_net_price > 0) ? buyTx.raw_net_price : (buyTx.raw_price || Number(buyTx.entry_price) || 0)
+        const exitPrice = (tx.raw_net_price !== undefined && tx.raw_net_price > 0) ? tx.raw_net_price : (tx.raw_price || Number(tx.exit_price) || 0)
         const quantity = Math.min(Number(buyTx.quantity) || 0, Number(tx.quantity) || 0)
         const totalCommission = (Number(buyTx.commission) || 0) + (Number(tx.commission) || 0)
         
-        // Calculate PnL: (exit - entry) * quantity - commissions
-        const pnlBeforeFees = (exitPrice - entryPrice) * quantity
-        const pnl = pnlBeforeFees - totalCommission
+        // Calculate PnL: (exit - entry) * quantity
+        // If net_price is used, commission is already included in the price, so we don't subtract it again
+        const hasNetPrices = (buyTx.raw_net_price !== undefined && buyTx.raw_net_price > 0) || (tx.raw_net_price !== undefined && tx.raw_net_price > 0)
+        const pnl = hasNetPrices ? (exitPrice - entryPrice) * quantity : ((exitPrice - entryPrice) * quantity - totalCommission)
 
         const completedTrade: ParsedTrade = {
           symbol,
           entry_price: entryPrice,
           exit_price: exitPrice,
           pnl,
-          trade_date: buyTx.trade_date, // Use buy date as trade date
+          trade_date: buyTx['Exec Time'] ? parseDate(buyTx['Exec Time']) : buyTx.trade_date, // Use actual execution time from buy transaction
           side: 'BUY', // Completed trades are marked as BUY (entry)
           quantity,
           commission: totalCommission,
@@ -338,7 +345,7 @@ function matchTradesAndCalculatePnL(transactions: ParsedTrade[]): ParsedTrade[] 
 
         completedTrades.push(completedTrade)
 
-        console.log(`Matched trade: ${symbol} - Buy@${entryPrice} (${buyTx['Exec Time']}) Sell@${exitPrice} (${tx['Exec Time']}) Qty:${quantity} PnL:${pnl.toFixed(2)}`)
+        console.log(`Matched trade: ${symbol} - Buy@${entryPrice} (${buyTx['Exec Time']}) Sell@${exitPrice} (${tx['Exec Time']}) Qty:${quantity} PnL:${pnl.toFixed(2)} ${hasNetPrices ? '(using net prices)' : '(using regular prices)'}`)
       } else if (tx.side === 'SELL') {
         // Sell with no matching buy - add as incomplete
         completedTrades.push({
