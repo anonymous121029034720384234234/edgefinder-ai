@@ -406,9 +406,10 @@ export default function AnalyticsPage() {
                     const isRecent = (Date.now() - uploadDate.getTime()) < 24 * 60 * 60 * 1000
                     
                     return (
-                      <div 
+                      <a
                         key={upload.id}
-                        className="group bg-white/[0.02] border border-white/[0.06] rounded-xl p-5 hover:bg-white/[0.05] hover:border-white/[0.1] transition-all"
+                        href={`/analysis/${upload.id}`}
+                        className="group bg-white/[0.02] border border-white/[0.06] rounded-xl p-5 hover:bg-white/[0.05] hover:border-white/[0.1] transition-all cursor-pointer block"
                       >
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-4 flex-1">
@@ -454,7 +455,7 @@ export default function AnalyticsPage() {
                           
                           <ChevronRight className="w-5 h-5 text-gray-500 group-hover:text-gray-300 transition-colors ml-4 flex-shrink-0" />
                         </div>
-                      </div>
+                      </a>
                     )
                   })}
                 </div>

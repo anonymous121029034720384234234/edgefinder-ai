@@ -13,6 +13,16 @@ export async function getUserUploads() {
   return response.json()
 }
 
+export async function getUploadInsights(uploadId: string) {
+  const response = await fetch(`/api/uploads/${uploadId}/insights`)
+  
+  if (!response.ok) {
+    throw new Error('Failed to fetch insights')
+  }
+  
+  return response.json()
+}
+
 export async function getUploadTrades(uploadId: string) {
   const response = await fetch(`/api/uploads/${uploadId}`)
   
