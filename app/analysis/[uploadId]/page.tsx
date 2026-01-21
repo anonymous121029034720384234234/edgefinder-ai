@@ -437,7 +437,7 @@ export default function AnalysisPage() {
                     <div>
                       <h4 className="text-sm font-semibold text-green-400 mb-3">Strengths</h4>
                       <ul className="space-y-2">
-                        {insights.riskManagementScore.strengths.map((strength, i) => (
+                        {insights.riskManagementScore.strengths.map((strength: string, i: number) => (
                           <li key={i} className="text-sm text-gray-300 flex items-start gap-2">
                             <CheckCircle2 className="w-4 h-4 text-green-400 mt-0.5 flex-shrink-0" />
                             {strength}
@@ -449,7 +449,7 @@ export default function AnalysisPage() {
                     <div>
                       <h4 className="text-sm font-semibold text-red-400 mb-3">Weaknesses</h4>
                       <ul className="space-y-2">
-                        {insights.riskManagementScore.weaknesses.map((weakness, i) => (
+                        {insights.riskManagementScore.weaknesses.map((weakness: string, i: number) => (
                           <li key={i} className="text-sm text-gray-300 flex items-start gap-2">
                             <AlertCircle className="w-4 h-4 text-red-400 mt-0.5 flex-shrink-0" />
                             {weakness}
@@ -471,7 +471,7 @@ export default function AnalysisPage() {
                     </div>
 
                     <div className="space-y-3">
-                      {insights.topSymbols.map((symbol) => (
+                      {insights.topSymbols.map((symbol: any) => (
                         <div key={symbol.symbol} className="bg-white/[0.02] border border-white/[0.06] rounded-lg p-4 flex items-center justify-between">
                           <div>
                             <div className="font-bold text-white text-lg">{symbol.symbol}</div>

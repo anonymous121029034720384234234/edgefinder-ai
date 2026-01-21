@@ -9,10 +9,21 @@ export interface Trade {
   entry_price: number
   exit_price: number
   pnl: number
-  trade_date: string
+  trade_date?: string
+  side?: 'BUY' | 'SELL'
+  quantity: number
+  commission?: number
+  [key: string]: any
+}
+
+export interface Transaction {
+  id: string
+  symbol: string
   side: 'BUY' | 'SELL'
   quantity: number
-  commission: number
+  price: number
+  exec_time: string | null
+  commission?: number
   [key: string]: any
 }
 
@@ -53,9 +64,140 @@ export interface Insights {
   }>
 }
 
-function getHourBucket(dateString: string): string {
-  const date = new Date(dateString)
+// Parse various datetime formats from different brokers and platforms
+// Supports: YYYY-MM-DD HH:MM:SS, ISO 8601, MM/DD/YYYY, DD/MM/YYYY, Unix timestamps, and more
+function parseDateTime(dateStr: string | null | undefined): Date | null {
+  if (!dateStr || typeof dateStr !== 'string') return null
+  
+  const trimmed = dateStr.trim()
+  if (!trimmed) return null
+  
+  try {
+    // Check if it's a Unix timestamp (milliseconds or seconds)
+    const asNumber = Number(trimmed)
+    if (!isNaN(asNumber) && asNumber > 0) {
+      // If number is less than 10 billion, assume it's seconds; otherwise milliseconds
+      const timestamp = asNumber < 10000000000 ? asNumber * 1000 : asNumber
+      const date = new Date(timestamp)
+      if (!isNaN(date.getTime())) {
+        return date
+      }
+    }
+    
+    // ISO 8601 format with T separator and timezone (2024-01-15T09:30:45Z, 2024-01-15T09:30:45+00:00)
+    if (trimmed.includes('T')) {
+      const date = new Date(trimmed)
+      if (!isNaN(date.getTime())) {
+        return date
+      }
+    }
+    
+    // YYYY-MM-DD HH:MM:SS (most common broker format)
+    // Also supports: YYYY-MM-DD HH:MM, YYYY-MM-DD HH:MM:SS.mmm
+    const yyyymmddRegex = /(\d{4})-(\d{1,2})-(\d{1,2})\s+(\d{1,2}):(\d{2})(?::(\d{2}))?(?:\.(\d{3}))?/
+    const match1 = trimmed.match(yyyymmddRegex)
+    if (match1) {
+      const year = parseInt(match1[1])
+      const month = parseInt(match1[2]) - 1
+      const day = parseInt(match1[3])
+      const hour = parseInt(match1[4])
+      const minute = parseInt(match1[5])
+      const second = match1[6] ? parseInt(match1[6]) : 0
+      const ms = match1[7] ? parseInt(match1[7]) : 0
+      const date = new Date(year, month, day, hour, minute, second, ms)
+      if (!isNaN(date.getTime())) return date
+    }
+    
+    // MM/DD/YYYY HH:MM:SS or MM/DD/YYYY HH:MM (US format)
+    const mmddyyyyRegex = /(\d{1,2})\/(\d{1,2})\/(\d{4})\s+(\d{1,2}):(\d{2})(?::(\d{2}))?/
+    const match2 = trimmed.match(mmddyyyyRegex)
+    if (match2) {
+      const month = parseInt(match2[1]) - 1
+      const day = parseInt(match2[2])
+      const year = parseInt(match2[3])
+      const hour = parseInt(match2[4])
+      const minute = parseInt(match2[5])
+      const second = match2[6] ? parseInt(match2[6]) : 0
+      const date = new Date(year, month, day, hour, minute, second)
+      if (!isNaN(date.getTime())) return date
+    }
+    
+    // DD/MM/YYYY HH:MM:SS or DD/MM/YYYY HH:MM (European format)
+    // Smart detection: if first number > 12, assume DD/MM
+    const ddmmyyyyRegex = /(\d{1,2})\/(\d{1,2})\/(\d{4})\s+(\d{1,2}):(\d{2})(?::(\d{2}))?/
+    const match3 = trimmed.match(ddmmyyyyRegex)
+    if (match3) {
+      const firstNum = parseInt(match3[1])
+      const secondNum = parseInt(match3[2])
+      
+      // If first > 12, definitely DD/MM format
+      // If second > 12, definitely MM/DD format  
+      // Otherwise, default to MM/DD (US convention)
+      if (firstNum > 12 || (secondNum <= 12 && firstNum <= 12 && secondNum > firstNum)) {
+        // DD/MM/YYYY format
+        const day = firstNum
+        const month = secondNum - 1
+        const year = parseInt(match3[3])
+        const hour = parseInt(match3[4])
+        const minute = parseInt(match3[5])
+        const second = match3[6] ? parseInt(match3[6]) : 0
+        const date = new Date(year, month, day, hour, minute, second)
+        if (!isNaN(date.getTime())) return date
+      }
+    }
+    
+    // YYYY/MM/DD HH:MM:SS (alternative separator)
+    const yyyysmmsddsRegex = /(\d{4})\/(\d{1,2})\/(\d{1,2})\s+(\d{1,2}):(\d{2})(?::(\d{2}))?/
+    const match4 = trimmed.match(yyyysmmsddsRegex)
+    if (match4) {
+      const year = parseInt(match4[1])
+      const month = parseInt(match4[2]) - 1
+      const day = parseInt(match4[3])
+      const hour = parseInt(match4[4])
+      const minute = parseInt(match4[5])
+      const second = match4[6] ? parseInt(match4[6]) : 0
+      const date = new Date(year, month, day, hour, minute, second)
+      if (!isNaN(date.getTime())) return date
+    }
+    
+    // MM-DD-YYYY HH:MM:SS (dash separators)
+    const mmdashdddashdashyyyyRegex = /(\d{1,2})-(\d{1,2})-(\d{4})\s+(\d{1,2}):(\d{2})(?::(\d{2}))?/
+    const match5 = trimmed.match(mmdashdddashdashyyyyRegex)
+    if (match5) {
+      const month = parseInt(match5[1]) - 1
+      const day = parseInt(match5[2])
+      const year = parseInt(match5[3])
+      const hour = parseInt(match5[4])
+      const minute = parseInt(match5[5])
+      const second = match5[6] ? parseInt(match5[6]) : 0
+      const date = new Date(year, month, day, hour, minute, second)
+      if (!isNaN(date.getTime())) return date
+    }
+    
+    // Fallback: Try native Date parsing for other formats
+    const date = new Date(trimmed)
+    if (!isNaN(date.getTime())) {
+      return date
+    }
+
+    console.warn('Could not parse datetime:', dateStr)
+    return null
+  } catch (e) {
+    console.error('Error parsing date:', dateStr, e)
+    return null
+  }
+}
+
+function getHourBucket(date: Date): string {
+  if (!date || isNaN(date.getTime())) return 'Unknown'
+  
   const hour = date.getHours()
+  
+  // Validate hour is in valid range
+  if (hour < 0 || hour > 23) {
+    console.warn('Invalid hour extracted:', hour, 'from date:', date)
+    return 'Unknown'
+  }
   
   if (hour < 6) return 'Night (12AM-6AM)'
   if (hour < 12) return 'Morning (6AM-12PM)'
@@ -64,15 +206,15 @@ function getHourBucket(dateString: string): string {
   return 'Late (9PM-12AM)'
 }
 
-function getDayName(dateString: string): string {
-  const date = new Date(dateString)
+function getDayName(date: Date): string {
+  if (!date || isNaN(date.getTime())) return 'Unknown'
   const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
-  return days[date.getDay()]
+  const dayIndex = date.getDay()
+  if (dayIndex < 0 || dayIndex > 6) return 'Unknown'
+  return days[dayIndex]
 }
 
-function calculateHoldTime(entry: string, exit: string): number {
-  const entryDate = new Date(entry)
-  const exitDate = new Date(exit)
+function calculateHoldTime(entryDate: Date, exitDate: Date): number {
   const diffMs = exitDate.getTime() - entryDate.getTime()
   return diffMs / (1000 * 60 * 60) // Convert to hours
 }
@@ -83,7 +225,7 @@ function formatHoldTime(hours: number): string {
   return `${(hours / 24).toFixed(1)}d`
 }
 
-export function calculateInsights(trades: Trade[]): Insights {
+export function calculateInsights(trades: Trade[], transactions: Transaction[] = []): Insights {
   if (trades.length === 0) {
     return {
       overallPerformance: {
@@ -131,12 +273,58 @@ export function calculateInsights(trades: Trade[]): Insights {
   const largestWin = Math.max(...trades.map(t => t.pnl), 0)
   const largestLoss = Math.min(...trades.map(t => t.pnl), 0)
 
-  // Time Patterns - by Hour
+  // Build transaction map for timing lookups - index by trade_id or id
+  const transactionsByTradeId: { [key: string]: Transaction[] } = {}
+  transactions.forEach(t => {
+    // Try multiple field names that might contain the trade reference
+    const tradeId = (t as any).trade_id || (t as any).tradeId || t.id
+    if (tradeId) {
+      if (!transactionsByTradeId[tradeId]) transactionsByTradeId[tradeId] = []
+      transactionsByTradeId[tradeId].push(t)
+    }
+  })
+
+  // Time Patterns - by Hour (using transaction times - EXIT time)
   const timePatterns: { [key: string]: Trade[] } = {}
+  
   trades.forEach(trade => {
-    const bucket = getHourBucket(trade.trade_date)
-    if (!timePatterns[bucket]) timePatterns[bucket] = []
-    timePatterns[bucket].push(trade)
+    let timeStr: string | null = null
+    
+    // Try to get exit transaction time for this trade (when it was sold/closed)
+    if (trade.id && transactionsByTradeId[trade.id]?.length > 0) {
+      // Sort by exec_time to get transactions in order
+      const txsSorted = [...transactionsByTradeId[trade.id]].sort((a, b) => {
+        const timeA = parseDateTime(a.exec_time) || new Date(0)
+        const timeB = parseDateTime(b.exec_time) || new Date(0)
+        return timeA.getTime() - timeB.getTime()
+      })
+      
+      // Get the LAST (exit) transaction - when the trade was closed
+      const exitTx = txsSorted[txsSorted.length - 1]
+      if (exitTx?.exec_time) {
+        const date = parseDateTime(exitTx.exec_time)
+        if (date && !isNaN(date.getTime())) {
+          timeStr = getHourBucket(date)
+          if (!timeStr || timeStr === 'Unknown') {
+            console.warn('Failed to get time bucket for trade:', trade.id, 'Date:', date)
+          }
+        }
+      }
+    }
+    
+    // Fallback to trade_date if available
+    if (!timeStr && trade.trade_date) {
+      const date = parseDateTime(trade.trade_date)
+      if (date && !isNaN(date.getTime())) {
+        timeStr = getHourBucket(date)
+      }
+    }
+    
+    // If we got a valid time, add to patterns
+    if (timeStr && timeStr !== 'Unknown') {
+      if (!timePatterns[timeStr]) timePatterns[timeStr] = []
+      timePatterns[timeStr].push(trade)
+    }
   })
 
   const timeStats = Object.entries(timePatterns).map(([time, timeTrades]) => ({
@@ -146,19 +334,59 @@ export function calculateInsights(trades: Trade[]): Insights {
     pnl: timeTrades.reduce((sum, t) => sum + t.pnl, 0),
   }))
 
-  const bestTime = timeStats.reduce((best, current) => 
-    current.pnl > best.pnl ? current : best
-  )
-  const worstTime = timeStats.reduce((worst, current) => 
-    current.pnl < worst.pnl ? current : worst
-  )
+  const bestTime = timeStats.length > 0 
+    ? timeStats.reduce((best, current) => 
+        current.pnl > best.pnl ? current : best
+      )
+    : { time: 'N/A', trades: [], winRate: 0, pnl: 0 }
 
-  // Day of Week Patterns
+  const worstTime = timeStats.length > 0
+    ? timeStats.reduce((worst, current) => 
+        current.pnl < worst.pnl ? current : worst
+      )
+    : { time: 'N/A', trades: [], winRate: 0, pnl: 0 }
+
+  // Day of Week Patterns (using transaction times - EXIT time)
   const dayPatterns: { [key: string]: Trade[] } = {}
+  
   trades.forEach(trade => {
-    const day = getDayName(trade.trade_date)
-    if (!dayPatterns[day]) dayPatterns[day] = []
-    dayPatterns[day].push(trade)
+    let dayStr: string | null = null
+    
+    // Try to get exit transaction time for this trade (when it was sold/closed)
+    if (trade.id && transactionsByTradeId[trade.id]?.length > 0) {
+      // Sort by exec_time to get transactions in order
+      const txsSorted = [...transactionsByTradeId[trade.id]].sort((a, b) => {
+        const timeA = parseDateTime(a.exec_time) || new Date(0)
+        const timeB = parseDateTime(b.exec_time) || new Date(0)
+        return timeA.getTime() - timeB.getTime()
+      })
+      
+      // Get the LAST (exit) transaction - when the trade was closed
+      const exitTx = txsSorted[txsSorted.length - 1]
+      if (exitTx?.exec_time) {
+        const date = parseDateTime(exitTx.exec_time)
+        if (date && !isNaN(date.getTime())) {
+          dayStr = getDayName(date)
+          if (!dayStr) {
+            console.warn('Failed to get day name for trade:', trade.id, 'Date:', date)
+          }
+        }
+      }
+    }
+    
+    // Fallback to trade_date if available
+    if (!dayStr && trade.trade_date) {
+      const date = parseDateTime(trade.trade_date)
+      if (date && !isNaN(date.getTime())) {
+        dayStr = getDayName(date)
+      }
+    }
+    
+    // If we got a valid day, add to patterns
+    if (dayStr) {
+      if (!dayPatterns[dayStr]) dayPatterns[dayStr] = []
+      dayPatterns[dayStr].push(trade)
+    }
   })
 
   const dayStats = Object.entries(dayPatterns).map(([day, dayTrades]) => ({
@@ -168,20 +396,73 @@ export function calculateInsights(trades: Trade[]): Insights {
     pnl: dayTrades.reduce((sum, t) => sum + t.pnl, 0),
   }))
 
-  const bestDay = dayStats.reduce((best, current) => 
-    current.pnl > best.pnl ? current : best
-  )
-  const worstDay = dayStats.reduce((worst, current) => 
-    current.pnl < worst.pnl ? current : worst
-  )
+  const bestDay = dayStats.length > 0
+    ? dayStats.reduce((best, current) => 
+        current.pnl > best.pnl ? current : best
+      )
+    : { day: 'N/A', trades: [], winRate: 0, pnl: 0 }
 
-  // Holding Time Analysis
-  const winnerHoldTimes = winners
-    .filter(t => t.trade_date && t.trade_date) // Has both dates
-    .map(t => calculateHoldTime(t.trade_date, new Date().toISOString()))
-  const loserHoldTimes = losers
-    .filter(t => t.trade_date && t.trade_date)
-    .map(t => calculateHoldTime(t.trade_date, new Date().toISOString()))
+  const worstDay = dayStats.length > 0
+    ? dayStats.reduce((worst, current) => 
+        current.pnl < worst.pnl ? current : worst
+      )
+    : { day: 'N/A', trades: [], winRate: 0, pnl: 0 }
+
+  // Holding Time Analysis (using transaction times for accurate entry/exit)
+  const winnerHoldTimes: number[] = []
+  const loserHoldTimes: number[] = []
+
+  winners.forEach(trade => {
+    if (trade.id && transactionsByTradeId[trade.id]?.length >= 2) {
+      const txs = transactionsByTradeId[trade.id].sort((a, b) => {
+        const timeA = parseDateTime(a.exec_time) || new Date(0)
+        const timeB = parseDateTime(b.exec_time) || new Date(0)
+        return timeA.getTime() - timeB.getTime()
+      })
+      
+      // Try to find BUY and SELL, or just use first and last
+      const buyTx = txs.find(t => t.side === 'BUY') || txs[0]
+      const sellTx = txs.find(t => t.side === 'SELL') || txs[txs.length - 1]
+      
+      if (buyTx?.exec_time && sellTx?.exec_time && buyTx !== sellTx) {
+        const entryDate = parseDateTime(buyTx.exec_time)
+        const exitDate = parseDateTime(sellTx.exec_time)
+        
+        if (entryDate && exitDate && exitDate > entryDate) {
+          const holdHours = calculateHoldTime(entryDate, exitDate)
+          if (holdHours > 0) {
+            winnerHoldTimes.push(holdHours)
+          }
+        }
+      }
+    }
+  })
+
+  losers.forEach(trade => {
+    if (trade.id && transactionsByTradeId[trade.id]?.length >= 2) {
+      const txs = transactionsByTradeId[trade.id].sort((a, b) => {
+        const timeA = parseDateTime(a.exec_time) || new Date(0)
+        const timeB = parseDateTime(b.exec_time) || new Date(0)
+        return timeA.getTime() - timeB.getTime()
+      })
+      
+      // Try to find BUY and SELL, or just use first and last
+      const buyTx = txs.find(t => t.side === 'BUY') || txs[0]
+      const sellTx = txs.find(t => t.side === 'SELL') || txs[txs.length - 1]
+      
+      if (buyTx?.exec_time && sellTx?.exec_time && buyTx !== sellTx) {
+        const entryDate = parseDateTime(buyTx.exec_time)
+        const exitDate = parseDateTime(sellTx.exec_time)
+        
+        if (entryDate && exitDate && exitDate > entryDate) {
+          const holdHours = calculateHoldTime(entryDate, exitDate)
+          if (holdHours > 0) {
+            loserHoldTimes.push(holdHours)
+          }
+        }
+      }
+    }
+  })
 
   const avgWinnerHoldTime = winnerHoldTimes.length > 0 
     ? winnerHoldTimes.reduce((a, b) => a + b, 0) / winnerHoldTimes.length 
@@ -198,7 +479,6 @@ export function calculateInsights(trades: Trade[]): Insights {
 
   // Risk Management Score (1-10)
   const largeDrawdowns = trades.filter(t => t.pnl < -(Math.abs(totalPnL) * 0.1)).length
-  const consistentPositionSizing = trades.length > 10 // Simplified
   const riskScore = Math.min(10, Math.max(1, 
     5 + 
     (winRate > 50 ? 2 : -1) + 

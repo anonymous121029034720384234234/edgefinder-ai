@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@clerk/nextjs/server'
 import { createClient } from '@supabase/supabase-js'
-import { calculateInsights } from '@/lib/insightsCalculator'
+import { calculateInsights } from '../../../../../lib/insightsCalculator'
 
 export async function GET(
   request: NextRequest,
@@ -65,6 +65,21 @@ export async function GET(
       )
     }
 
+    // Get all transactions for this upload (for accurate timing info)
+    const { data: transactions, error: transactionsError } = await supabase
+      .from('transactions')
+      .select('*')
+      .eq('upload_id', uploadId)
+      .order('exec_time', { ascending: false })
+
+    if (transactionsError) {
+      console.error('Error fetching transactions:', transactionsError)
+      return NextResponse.json(
+        { error: 'Failed to fetch transactions' },
+        { status: 500 }
+      )
+    }
+
     if (!trades || trades.length === 0) {
       return NextResponse.json(
         { error: 'No trades found in this upload' },
@@ -79,8 +94,8 @@ export async function GET(
       )
     }
 
-    // Calculate insights
-    const insights = calculateInsights(trades)
+    // Calculate insights - pass both trades and transactions
+    const insights = calculateInsights(trades, transactions || [])
 
     return NextResponse.json({
       success: true,
