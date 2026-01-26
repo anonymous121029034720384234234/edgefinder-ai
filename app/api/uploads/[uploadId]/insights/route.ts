@@ -1,7 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@clerk/nextjs/server'
-import { createClient } from '@supabase/supabase-js'
+import { getSupabaseClient } from '@/lib/supabaseServer'
 import { calculateInsights } from '../../../../../lib/insightsCalculator'
+
+// Cache insights for 5 minutes since they're calculated data
+export const revalidate = 300
 
 export async function GET(
   request: NextRequest,
@@ -19,17 +22,7 @@ export async function GET(
 
     const { uploadId } = await params
     
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-    const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
-    
-    if (!supabaseUrl || !supabaseServiceKey) {
-      return NextResponse.json(
-        { error: 'Server configuration error' },
-        { status: 500 }
-      )
-    }
-
-    const supabase = createClient(supabaseUrl, supabaseServiceKey)
+    const supabase = getSupabaseClient()
 
     // Verify the upload belongs to this user
     const { data: upload, error: uploadError } = await supabase
@@ -50,10 +43,10 @@ export async function GET(
       )
     }
 
-    // Get all trades for this upload
+    // Get trades for this upload (select only needed fields for performance)
     const { data: trades, error: tradesError } = await supabase
       .from('trades')
-      .select('*')
+      .select('id, symbol, entry_price, exit_price, pnl, trade_date, quantity, side')
       .eq('upload_id', uploadId)
       .order('trade_date', { ascending: false })
 
@@ -65,10 +58,10 @@ export async function GET(
       )
     }
 
-    // Get all transactions for this upload (for accurate timing info)
+    // Get transactions for timing analysis (select only needed fields)
     const { data: transactions, error: transactionsError } = await supabase
       .from('transactions')
-      .select('*')
+      .select('id, trade_id, symbol, side, quantity, price, exec_time')
       .eq('upload_id', uploadId)
       .order('exec_time', { ascending: false })
 

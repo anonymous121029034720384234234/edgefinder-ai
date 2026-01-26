@@ -14,15 +14,6 @@ export default function Dashboard() {
   const [hoveredDay, setHoveredDay] = useState<number | null>(null);
   const [isDragOver, setIsDragOver] = useState(false);
 
-  // If not loaded, show loading state
-  if (!authLoaded || !userLoaded) {
-    return (
-      <div className="min-h-screen bg-[#080808] flex items-center justify-center">
-        <div className="text-white">Loading...</div>
-      </div>
-    );
-  }
-
   // Get user initials for avatar
   const getUserInitials = () => {
     if (!user?.firstName && !user?.lastName) {
@@ -364,7 +355,7 @@ export default function Dashboard() {
             
             {/* Stats Cards */}
             <div className="col-span-12 lg:col-span-4 grid grid-cols-2 gap-2">
-              <div className="bg-white/[0.02] backdrop-blur-sm border border-white/[0.08] rounded-xl p-2.5 hover:border-white/[0.12] transition-all">
+              <div className="bg-white/[0.02] backdrop-blur-sm border border-white/[0.08] rounded-xl px-3 py-2 hover:border-white/[0.12] transition-all">
                 <div className="flex items-center justify-between mb-2">
                   <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Total P&L</span>
                   <div className="w-7 h-7 rounded-lg bg-green-500/10 border border-green-500/20 flex items-center justify-center">
@@ -379,7 +370,7 @@ export default function Dashboard() {
                 </div>
               </div>
 
-              <div className="bg-white/[0.02] backdrop-blur-sm border border-white/[0.08] rounded-xl p-2.5 hover:border-white/[0.12] transition-all">
+              <div className="bg-white/[0.02] backdrop-blur-sm border border-white/[0.08] rounded-xl px-3 py-2 hover:border-white/[0.12] transition-all">
                 <div className="flex items-center justify-between mb-2">
                   <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Win Rate</span>
                   <div className="w-7 h-7 rounded-lg bg-blue-500/10 border border-blue-500/20 flex items-center justify-center">
@@ -393,7 +384,7 @@ export default function Dashboard() {
                 </div>
               </div>
 
-              <div className="bg-white/[0.02] backdrop-blur-sm border border-white/[0.08] rounded-xl p-2.5 hover:border-white/[0.12] transition-all">
+              <div className="bg-white/[0.02] backdrop-blur-sm border border-white/[0.08] rounded-xl px-3 py-2 hover:border-white/[0.12] transition-all">
                 <div className="flex items-center justify-between mb-2">
                   <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Avg Win</span>
                   <div className="w-7 h-7 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center">
@@ -407,7 +398,7 @@ export default function Dashboard() {
                 </div>
               </div>
 
-              <div className="bg-white/[0.02] backdrop-blur-sm border border-white/[0.08] rounded-xl p-2.5 hover:border-white/[0.12] transition-all">
+              <div className="bg-white/[0.02] backdrop-blur-sm border border-white/[0.08] rounded-xl px-3 py-2 hover:border-white/[0.12] transition-all">
                 <div className="flex items-center justify-between mb-2">
                   <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Avg Loss</span>
                   <div className="w-7 h-7 rounded-lg bg-red-500/10 border border-red-500/20 flex items-center justify-center">
@@ -423,7 +414,7 @@ export default function Dashboard() {
             </div>
 
             {/* P&L Chart - Trader-Focused */}
-            <div className="col-span-12 lg:col-span-8 bg-white/[0.02] backdrop-blur-sm border border-white/[0.08] rounded-xl px-3 py-2 hover:border-white/[0.12] transition-all">
+            <div className="col-span-12 lg:col-span-8 bg-white/[0.02] backdrop-blur-sm border border-white/[0.08] rounded-xl px-3 py-1 hover:border-white/[0.12] transition-all">
               <div className="flex items-center justify-between mb-2 px-1">
                 <div>
                   <h3 className="text-sm font-semibold text-white">Cumulative P&L</h3>
@@ -676,10 +667,10 @@ export default function Dashboard() {
           <div className="grid grid-cols-12 gap-2 mb-2">
             
             {/* Your Edge */}
-            <div className="col-span-12 md:col-span-6 lg:col-span-4 bg-white/[0.02] backdrop-blur-sm border border-white/[0.08] hover:border-white/[0.12] rounded-xl px-3.5 py-2.5 transition-all overflow-hidden relative">
+            <div className="col-span-12 md:col-span-6 lg:col-span-4 bg-white/[0.02] backdrop-blur-sm border border-white/[0.08] hover:border-white/[0.12] rounded-xl px-3 py-3 transition-all overflow-hidden relative">
               <div className="absolute inset-0 bg-gradient-to-br from-green-500/5 via-transparent to-transparent opacity-0 hover:opacity-100 transition-opacity duration-300" />
               <div className="relative">
-                <div className="flex items-start gap-2.5 mb-3">
+                <div className="flex items-start gap-2.5 mb-2">
                   <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-green-500/20 to-emerald-500/10 border border-green-500/20 flex items-center justify-center flex-shrink-0">
                     <Target className="w-4.5 h-4.5 text-green-400" />
                   </div>
@@ -688,7 +679,7 @@ export default function Dashboard() {
                     <div className="text-sm text-gray-200 font-medium leading-tight">Morning trades (9:30-10:30 AM)</div>
                   </div>
                 </div>
-                <div className="mt-4 space-y-2">
+                <div className="mt-0.5 space-y-2">
                   <div className="flex items-baseline gap-2">
                     <div className="text-2.5xl font-bold text-green-400">78%</div>
                     <div className="text-xs text-green-400/70 font-semibold">win rate</div>
@@ -702,10 +693,10 @@ export default function Dashboard() {
             </div>
 
             {/* Biggest Leak */}
-            <div className="col-span-12 md:col-span-6 lg:col-span-4 bg-white/[0.02] backdrop-blur-sm border border-white/[0.08] hover:border-white/[0.12] rounded-xl px-3.5 py-2.5 transition-all overflow-hidden relative">
+            <div className="col-span-12 md:col-span-6 lg:col-span-4 bg-white/[0.02] backdrop-blur-sm border border-white/[0.08] hover:border-white/[0.12] rounded-xl px-3 py-3 transition-all overflow-hidden relative">
               <div className="absolute inset-0 bg-gradient-to-br from-red-500/5 via-transparent to-transparent opacity-0 hover:opacity-100 transition-opacity duration-300" />
               <div className="relative">
-                <div className="flex items-start gap-2.5 mb-3">
+                <div className="flex items-start gap-2.5 mb-2">
                   <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-red-500/20 to-rose-500/10 border border-red-500/20 flex items-center justify-center flex-shrink-0">
                     <AlertTriangle className="w-4.5 h-4.5 text-red-400" />
                   </div>
@@ -714,7 +705,7 @@ export default function Dashboard() {
                     <div className="text-sm text-gray-200 font-medium leading-tight">Hold losers 3.2x longer than winners</div>
                   </div>
                 </div>
-                <div className="mt-4 space-y-2">
+                <div className="mt-0.5 space-y-2">
                   <div className="flex items-baseline gap-2">
                     <div className="text-2.5xl font-bold text-red-400">7.8h</div>
                     <div className="text-xs text-red-400/70 font-semibold">avg hold</div>
@@ -728,7 +719,7 @@ export default function Dashboard() {
             </div>
 
             {/* Recent Trades */}
-            <div className="col-span-12 lg:col-span-4 bg-white/[0.02] backdrop-blur-sm border border-white/[0.08] rounded-xl px-3.5 py-2.5 hover:border-white/[0.12] transition-all">
+            <div className="col-span-12 lg:col-span-4 bg-white/[0.02] backdrop-blur-sm border border-white/[0.08] rounded-xl px-3 py-2 hover:border-white/[0.12] transition-all">
               <h4 className="text-sm font-bold text-white mb-2.5">Recent Trades</h4>
               <div className="space-y-1.5">
                 {recentTrades.slice(0, 4).map((trade, idx) => (
@@ -754,7 +745,7 @@ export default function Dashboard() {
           <div className="grid grid-cols-12 gap-2">
             
             {/* Time Patterns */}
-            <div className="col-span-12 lg:col-span-6 bg-white/[0.02] backdrop-blur-sm border border-white/[0.08] rounded-xl px-3.5 py-2.5 hover:border-white/[0.12] transition-all">
+            <div className="col-span-12 lg:col-span-6 bg-white/[0.02] backdrop-blur-sm border border-white/[0.08] rounded-xl px-3.5 py-2 hover:border-white/[0.12] transition-all">
               <h3 className="text-base font-bold text-white mb-2.5">Time & Day Patterns</h3>
               
               <div className="grid grid-cols-2 gap-2.5 mb-2.5">
@@ -798,7 +789,7 @@ export default function Dashboard() {
             {/* Scores */}
             <div className="col-span-12 lg:col-span-6 grid grid-cols-2 gap-2">
               {/* Emotional Control Score */}
-              <div className="bg-white/[0.02] backdrop-blur-sm border border-white/[0.08] rounded-xl px-3.5 py-2.5 hover:border-white/[0.12] transition-all cursor-pointer group">
+              <div className="bg-white/[0.02] backdrop-blur-sm border border-white/[0.08] rounded-xl px-3.5 py-2 hover:border-white/[0.12] transition-all cursor-pointer group">
                 {/* Header */}
                 <div className="flex items-start justify-between mb-3.5">
                   <div>
@@ -848,7 +839,7 @@ export default function Dashboard() {
               </div>
 
               {/* Risk Management Score */}
-              <div className="bg-white/[0.02] backdrop-blur-sm border border-white/[0.08] rounded-xl px-3.5 py-2.5 hover:border-white/[0.12] transition-all cursor-pointer group">
+              <div className="bg-white/[0.02] backdrop-blur-sm border border-white/[0.08] rounded-xl px-3.5 py-2 hover:border-white/[0.12] transition-all cursor-pointer group">
                 {/* Header */}
                 <div className="flex items-start justify-between mb-3.5">
                   <div>

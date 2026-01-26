@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@clerk/nextjs/server'
-import { createClient } from '@supabase/supabase-js'
+import { getSupabaseClient } from '@/lib/supabaseServer'
+
+// Cache trades for 60 seconds
+export const revalidate = 60
 
 export async function GET(request: NextRequest) {
   try {
@@ -13,17 +16,7 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-    const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
-    
-    if (!supabaseUrl || !supabaseServiceKey) {
-      return NextResponse.json(
-        { error: 'Server configuration error' },
-        { status: 500 }
-      )
-    }
-
-    const supabase = createClient(supabaseUrl, supabaseServiceKey)
+    const supabase = getSupabaseClient()
 
     // Get all uploads for this user
     const { data: uploads, error: uploadsError } = await supabase
@@ -45,12 +38,13 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ trades: [] }, { status: 200 })
     }
 
-    // Get all trades from these uploads
+    // Get trades from these uploads - limit to recent trades for performance
     const { data: trades, error: tradesError } = await supabase
       .from('trades')
       .select('*')
       .in('upload_id', uploadIds)
       .order('trade_date', { ascending: false })
+      .limit(1000) // Limit to last 1000 trades for performance
 
     if (tradesError) {
       console.error('Error fetching trades:', tradesError)

@@ -66,14 +66,6 @@ export default function AnalyticsPage() {
     }
   }
 
-  if (!authLoaded || !userLoaded) {
-    return (
-      <div className="min-h-screen bg-[#080808] flex items-center justify-center">
-        <div className="text-white">Loading...</div>
-      </div>
-    )
-  }
-
   const getUserInitials = () => {
     if (!user?.firstName && !user?.lastName) {
       return user?.emailAddresses[0]?.emailAddress?.charAt(0).toUpperCase() || 'U'
