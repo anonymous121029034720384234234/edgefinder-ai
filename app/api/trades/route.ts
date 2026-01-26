@@ -32,7 +32,7 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    const uploadIds = uploads?.map(u => u.id) || []
+    const uploadIds = uploads?.map((u: any) => u.id) || []
 
     if (uploadIds.length === 0) {
       return NextResponse.json({ trades: [] }, { status: 200 })

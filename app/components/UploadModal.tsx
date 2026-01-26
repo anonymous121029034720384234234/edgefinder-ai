@@ -107,7 +107,12 @@ export default function UploadModal({ isOpen, onClose, uploadedFile, onFileChang
             }}
           />
           
-          <label htmlFor="file-upload-modal" className="cursor-pointer">
+          <div className="cursor-pointer" onClick={() => {
+            if (!isLoading) {
+              const input = document.getElementById('file-upload-modal') as HTMLInputElement
+              input?.click()
+            }
+          }}>
             {uploadedFile ? (
               <>
                 <div className="text-4xl mb-3">📄</div>
@@ -124,10 +129,11 @@ export default function UploadModal({ isOpen, onClose, uploadedFile, onFileChang
             <button 
               className="px-5 py-2 rounded-lg bg-white/[0.08] hover:bg-white/[0.12] border border-white/[0.08] text-white font-medium transition-all text-sm disabled:opacity-50"
               disabled={isLoading}
+              type="button"
             >
               {uploadedFile ? 'Change File' : 'Choose File'}
             </button>
-          </label>
+          </div>
         </div>
 
         {uploadedFile && (
